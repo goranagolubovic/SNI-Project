@@ -1,0 +1,40 @@
+.button {
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.8vw;
+  line-height: 1vw;
+  text-align: center;
+  border-radius: 0.2vw;
+  width: 12.5vw;
+  height: 2.5vw;
+  border: none;
+  cursor: pointer;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.cancel {
+  background-color: #aa7e74;
+}
+.submit {
+  background-color: #f3dba5;
+}
+.table {
+  display: flex;
+  gap: 0.5vw;
+  background-color: #f3dba5;
+  text-align: start;
+  padding-left: 0.8vw;
+  padding-top: 0.5vw;
+  color: grey;
+}
+.add {
+  display: flex;
+  gap: 0.5vw;
+  background-color: #aa7e74;
+  text-align: start;
+  padding-left: 0.8vw;
+  padding-top: 0.5vw;
+  color: white;
+}

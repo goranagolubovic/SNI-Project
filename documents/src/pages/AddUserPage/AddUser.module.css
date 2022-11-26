@@ -1,0 +1,71 @@
+.container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 2vw;
+  justify-content: center;
+  align-items: center;
+  background-image: linear-gradient(
+    to bottom,
+    rgba(243, 198, 165, 0),
+    rgba(243, 198, 165, 1)
+  );
+}
+.content {
+  display: flex;
+  padding-top: 5%;
+  align-items: center;
+  /* gap: 2vh; */
+  width: 30%;
+  height: 70%;
+  flex-direction: column;
+  border-radius: 10px;
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px,
+    rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px,
+    rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+  background-color: white;
+}
+.addUser {
+  color: #8892b5;
+  width: 100%;
+  text-align: center;
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 24px;
+  letter-spacing: 0.02em;
+  margin-bottom: 50px;
+  margin-top: 0;
+}
+
+.buttonContainer {
+  display: flex;
+  margin-top: 5vh;
+  gap: 15px;
+}
+
+.component {
+  margin-bottom: 24px;
+}
+
+.componentWithError {
+  margin-bottom: 0px;
+  border-color: rgb(226, 80, 80);
+}
+
+.componentWithRegError {
+  margin-bottom: 10px;
+}
+
+.home_dir {
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  width: 15vw;
+  height: 2.5vw;
+  margin-bottom: 24px;
+}
+.dir {
+  color: #8892b5;
+  padding-bottom: 10%;
+}

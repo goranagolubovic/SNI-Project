@@ -21,6 +21,7 @@ const DefaultDir = () => {
   const history = useHistory();
   const [files, setFiles] = useState([]);
   const [fileContent, setFileContent] = useState<any>("");
+  const [isFileUploaded, setIsFileUploaded] = useState(false);
   const user = JSON.parse(localStorage.getItem("USER") || "").user;
   const token = JSON.parse(localStorage.getItem("USER") || "").token;
   const defaultDir = user.userDir;
@@ -99,8 +100,9 @@ const DefaultDir = () => {
           // The file's text will be printed here
           setFileContent(event.target?.result);
         };
-
-        reader.readAsText(file);
+        if (fileName.endsWith(".png" || ".jpeg" || "jpg" || "svg"))
+          reader.readAsDataURL(file);
+        else reader.readAsText(file);
       } else if (
         res.status === 403 ||
         res.status === 401 ||
@@ -138,8 +140,11 @@ const DefaultDir = () => {
       });
   };
   useEffect(() => {
-    if (file === "") getFiles(previousDir);
-  }, [previousDir, file]);
+    if (file === "" || isFileUploaded) {
+      setIsFileUploaded(false);
+      getFiles(previousDir);
+    }
+  }, [previousDir, file, isFileUploaded]);
 
   const onSubmit = async (data: CreateFileRequest) => {
     data.rootDir = previousDir;
@@ -178,64 +183,141 @@ const DefaultDir = () => {
       console.log(err);
     }
   };
+  const findFileChooser = () => {
+    document.getElementById("getFile")?.click();
+  };
+  const chooseFile = async (e: any) => {
+    const reader = new FileReader();
 
-  // const saveFile = async () => {
+    if (e.target.files.length !== 0) {
+      const fileChoosed = e.target.files[0];
+      reader.readAsDataURL(fileChoosed);
+      let formData = new FormData();
+      formData.append("folderName", previousDir);
+      formData.append("file", fileChoosed);
 
-  // };
+      reader.onloadend = async () => {
+        const result = reader.result;
+
+        fetch(BACKEND_URL + "files/upload", {
+          method: "POST",
+          headers: new Headers({
+            authorization: "Bearer " + token,
+          }),
+          body: formData,
+          mode: "cors",
+        })
+          .then((response) => Promise.all([response.status, response.text()]))
+          .then(function ([status, myJson]) {
+            if (status == 200) {
+              console.log(myJson);
+              alert(myJson);
+              setIsFileUploaded(true);
+            } else {
+              history.push("/");
+            }
+          })
+          .catch((error) => console.log(error.message));
+      };
+    }
+  };
+
   return (
     <div className={styles.centralContainer}>
       {file === "" && (
-        <div className={styles.actions}>
-          <div className={styles.actionsContent}>
-            <Button type="add" onClick={() => setIsFolderActive(true)}>
-              CREATE A NEW FOLDER
-            </Button>
-            {isAddFOlderActive && (
-              <div>
-                <form
-                  className={styles.controls}
-                  onSubmit={handleSubmit((data) => onSubmit(data))}
-                >
-                  <FileInput
-                    placeholder={"Name"}
-                    {...register("name", {
-                      required: true,
-                    })}
-                  ></FileInput>
-                  <Button type={"true"} />
-                  <Button
-                    type={"false"}
-                    onClick={() => setIsFolderActive(false)}
-                  ></Button>
-                </form>
-              </div>
-            )}
+        <div className={styles.centralContainer}>
+          <div className={styles.actions}>
+            <div className={styles.actionsContent}>
+              {user.role !== "client" && (
+                <Button type="add" onClick={() => setIsFolderActive(true)}>
+                  CREATE A NEW FOLDER
+                </Button>
+              )}
+              {isAddFOlderActive && (
+                <div>
+                  <form
+                    className={styles.controls}
+                    onSubmit={handleSubmit((data) => onSubmit(data))}
+                  >
+                    <FileInput
+                      placeholder={"Name"}
+                      {...register("name", {
+                        required: true,
+                      })}
+                    ></FileInput>
+                    <Button type={"true"} />
+                    <Button
+                      type={"false"}
+                      onClick={() => setIsFolderActive(false)}
+                    ></Button>
+                  </form>
+                </div>
+              )}
+            </div>
+            <div className={styles.actionsContent}>
+              {user.role !== "client" && (
+                <Button type="add" onClick={() => setIsFileActive(true)}>
+                  CREATE A NEW FILE
+                </Button>
+              )}
+              {isAddFileActive && (
+                <div>
+                  <form
+                    className={styles.controls}
+                    onSubmit={handleSubmit((data) => onSubmit(data))}
+                  >
+                    <FileInput
+                      placeholder={"Name"}
+                      {...register("name", {
+                        required: true,
+                      })}
+                    ></FileInput>
+                    <Button type={"true"} />
+                    <Button
+                      type={"false"}
+                      onClick={() => setIsFileActive(false)}
+                    ></Button>
+                  </form>
+                </div>
+              )}
+            </div>
+            <div className={styles.actionsContent}>
+              {user.role === "client" && (
+                <div>
+                  <Button type="add" onClick={() => findFileChooser()}>
+                    UPLOAD A NEW FILE
+                  </Button>
+                  <input
+                    type="file"
+                    id="getFile"
+                    className={styles.fileInput}
+                    onChange={(e) => chooseFile(e)}
+                  />
+                </div>
+              )}
+              {isAddFOlderActive && (
+                <div>
+                  <form
+                    className={styles.controls}
+                    onSubmit={handleSubmit((data) => onSubmit(data))}
+                  >
+                    <FileInput
+                      placeholder={"Name"}
+                      {...register("name", {
+                        required: true,
+                      })}
+                    ></FileInput>
+                    <Button type={"true"} />
+                    <Button
+                      type={"false"}
+                      onClick={() => setIsFolderActive(false)}
+                    ></Button>
+                  </form>
+                </div>
+              )}
+            </div>
           </div>
-          <div className={styles.actionsContent}>
-            <Button type="add" onClick={() => setIsFileActive(true)}>
-              CREATE A NEW FILE
-            </Button>
-            {isAddFileActive && (
-              <div>
-                <form
-                  className={styles.controls}
-                  onSubmit={handleSubmit((data) => onSubmit(data))}
-                >
-                  <FileInput
-                    placeholder={"Name"}
-                    {...register("name", {
-                      required: true,
-                    })}
-                  ></FileInput>
-                  <Button type={"true"} />
-                  <Button
-                    type={"false"}
-                    onClick={() => setIsFileActive(false)}
-                  ></Button>
-                </form>
-              </div>
-            )}
-          </div>
+
           <div className={styles.container}>
             {files?.map((e: any) => (
               <File
@@ -264,7 +346,18 @@ const DefaultDir = () => {
           </div>
         )}
         {/* <iframe src={fileContent}></iframe> */}
-        <p>{fileContent}</p>
+        {!file.endsWith(".png" || ".jpeg" || "jpg" || "svg") && (
+          <p>{fileContent}</p>
+        )}
+        {file.endsWith(".png" || ".jpeg" || "jpg" || "svg") && (
+          <div
+            className={styles.imageContainer}
+            style={{
+              backgroundImage: "url(" + fileContent + ")",
+              backgroundSize: "20vw",
+            }}
+          ></div>
+        )}
       </div>
     </div>
   );

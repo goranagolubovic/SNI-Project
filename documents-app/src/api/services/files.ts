@@ -2,6 +2,7 @@ import { BACKEND_URL } from "../../constants";
 import { deleteWithCredentials, getWithCredentials, postWithCredentials } from "../client";
 
 const headers = { "Content-Type": "application/json" };
+const uploadHeaders = { "Content-Type": "multipart/form-data" };
 
 const fetchFiles = async (dir: string) => {
     console.log("fetch" + dir)
@@ -42,4 +43,14 @@ const readFileContent = async (data: string) => {
     const response = await postWithCredentials(BACKEND_URL + "files/read", requestOptions);
     return response;
 }
+
+// const uploadFile = async (data: any) => {
+//     const requestOptions = {
+//         body: data,
+//     };
+//     console.log(data.get("folderName"));
+//     const response = await postWithCredentials(BACKEND_URL + "files/upload", requestOptions);
+//     return response;
+// }
+
 export { fetchFiles, createFile, deleteFile, readFileContent }

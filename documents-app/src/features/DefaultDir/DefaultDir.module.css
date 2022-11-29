@@ -36,3 +36,11 @@
   gap: 0.2vw;
   margin-top: 0.5vw;
 }
+
+.fileInput {
+  display: none;
+}
+.imageContainer {
+  width: 20vw;
+  height: 20vw;
+}

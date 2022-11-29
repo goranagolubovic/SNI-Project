@@ -39,3 +39,24 @@ input:focus {
 ::placeholder {
   color: #8892b5;
 }
+
+::-webkit-file-upload-button {
+  text-align: center;
+  border-radius: 0.2vw;
+  width: 12.5vw;
+  height: 2.5vw;
+  border: none;
+  cursor: pointer;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  display: flex;
+  gap: 0.5vw;
+  background-color: #aa7e74;
+  text-align: start;
+  padding-left: 0.8vw;
+  padding-top: 0.5vw;
+  color: white;
+  border: none;
+}

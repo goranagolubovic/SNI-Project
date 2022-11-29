@@ -5,11 +5,14 @@ import com.sni.dms.entities.FileEntity;
 import com.sni.dms.entities.UserEntity;
 import com.sni.dms.repositories.FilesRepository;
 import com.sni.dms.requests.DownloadFileRequest;
+import com.sni.dms.requests.UploadFileRequest;
 import com.sni.dms.responses.FileResponse;
 import lombok.SneakyThrows;
+import org.apache.commons.io.FileUtils;
 import org.apache.http.nio.entity.NFileEntity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -108,7 +111,20 @@ public class FilesService {
 //        }
 //        return null;
     }
-    
+
+    @SneakyThrows
+    public void uploadFile(MultipartFile file,String folderPath) {
+        File folder=new File(folderPath);
+        FileUtils.copyInputStreamToFile(file.getInputStream(), new File(folder.getAbsolutePath()+File.separator+file.getOriginalFilename()));
+
+        FileEntity fileEntity=new FileEntity();
+        fileEntity.setIsDir((byte) 0);
+        fileEntity.setName(folderPath+"/"+file.getOriginalFilename());
+        //mozda bude bespotrebno ovo
+        fileEntity.setRootDir(getIdForDir(folderPath));
+        filesRepository.save(fileEntity);
+    }
+
 
 //    private boolean checkIfFileIsInUserDir(String userDir, File file)
 //    {

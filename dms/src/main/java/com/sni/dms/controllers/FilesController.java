@@ -2,16 +2,22 @@ package com.sni.dms.controllers;
 
 import com.sni.dms.entities.FileEntity;
 import com.sni.dms.requests.CreateFileRequest;
+import com.sni.dms.requests.UploadFileRequest;
 import com.sni.dms.responses.FileResponse;
 import com.sni.dms.services.FilesService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 
 import java.io.File;
 import java.nio.file.Files;
 import java.util.List;
+
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
+
 @RestController
 @CrossOrigin("*")
 public class FilesController {
@@ -60,4 +66,10 @@ public class FilesController {
             return ResponseEntity.status(403).body(null);
         }
     }
+
+    @PostMapping(value = "/files/upload")
+    public ResponseEntity<String> uploadFile(@RequestParam MultipartFile file, @RequestParam String folderName){
+        filesService.uploadFile(file,folderName);
+            return ResponseEntity.status(200).body("File is uploaded successfully!");
+        }
 }

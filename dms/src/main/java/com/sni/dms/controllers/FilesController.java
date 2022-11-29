@@ -40,13 +40,24 @@ public class FilesController {
         return new ResponseEntity<>(filesService.addNewFile(fileEntity), HttpStatus.OK);
     }
 
-    @DeleteMapping(value = "/files")
+    @DeleteMapping(value = "/files/delete")
     public ResponseEntity<FileEntity>deleteFile(@RequestBody String body){
         FileEntity fileEntity=filesService.deleteFile(body);
         if(fileEntity!=null)
         return ResponseEntity.status(200).body(fileEntity);
         else{
             return ResponseEntity.status(404).body(fileEntity);
+        }
+    }
+
+    @PostMapping(value = "/files/read")
+    public ResponseEntity<byte[]> readFile(@RequestBody String body){
+        System.out.println("Reading file");
+        byte[] file=filesService.readFile(body);
+        if(file!=null)
+            return ResponseEntity.status(200).body(file);
+        else{
+            return ResponseEntity.status(403).body(null);
         }
     }
 }

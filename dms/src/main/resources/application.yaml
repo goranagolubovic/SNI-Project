@@ -2,7 +2,7 @@
 server:
   port: 8081
   ssl:
-    key-store: C:\Users\hp\Desktop\dms\keystore.p12
+    key-store: C:\Users\hp\Desktop\SNI-Project\dms\keystore.p12
     key-store-password: sigurnost
     keyStoreType: PKCS12
     keyAlias: tomcat

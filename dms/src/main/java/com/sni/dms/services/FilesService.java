@@ -2,9 +2,13 @@ package com.sni.dms.services;
 
 import com.google.gson.Gson;
 import com.sni.dms.entities.FileEntity;
+import com.sni.dms.entities.UserEntity;
 import com.sni.dms.repositories.FilesRepository;
+import com.sni.dms.requests.DownloadFileRequest;
 import com.sni.dms.responses.FileResponse;
+import lombok.SneakyThrows;
 import org.apache.http.nio.entity.NFileEntity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -17,6 +21,7 @@ import java.util.stream.Collectors;
 @Service
 public class FilesService {
     private final FilesRepository filesRepository;
+
     public FilesService(FilesRepository filesRepository){
         this.filesRepository=filesRepository;
     }
@@ -88,4 +93,39 @@ public class FilesService {
 //        );
        return (opt.isPresent() ?  opt.get() :  null);
     }
+
+    @SneakyThrows
+    public byte[] readFile(String downloadFileRequestJson) {
+        DownloadFileRequest downloadFileRequest=new Gson().fromJson(downloadFileRequestJson,DownloadFileRequest.class);
+        String filePath=downloadFileRequest.getFilePath();
+        String userDir=downloadFileRequest.getUserDir();
+        System.out.println("File is"+filePath);
+        File file=new File(filePath);
+        byte[] bytes={};
+//        if(checkIfFileIsInUserDir(userDir,file)) {
+            bytes = Files.readAllBytes(file.toPath());
+            return bytes;
+//        }
+//        return null;
+    }
+    
+
+//    private boolean checkIfFileIsInUserDir(String userDir, File file)
+//    {
+//        File rootDir=new File(userDir);
+//        return isFileAChildOf(rootDir,file);
+//    }
+
+//    private boolean isFileAChildOf(File rootDir, File file)
+//    {
+//        while(file!=null){
+//            if(!file.getParent().equals(rootDir)){
+//               file=new File(file.getParent());
+//            }
+//            else{
+//                return  true;
+//            }
+//        }
+//        return false;
+//    }
 }

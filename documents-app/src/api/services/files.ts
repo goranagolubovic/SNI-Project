@@ -29,7 +29,17 @@ const deleteFile = async (pathToFile: string) => {
         body: pathToFile,
     };
     console.log(pathToFile);
-    const response = await deleteWithCredentials(BACKEND_URL + "files", requestOptions);
+    const response = await deleteWithCredentials(BACKEND_URL + "files/delete", requestOptions);
     return response;
 }
-export { fetchFiles, createFile, deleteFile }
+
+const readFileContent = async (data: string) => {
+    const requestOptions = {
+        headers,
+        body: data,
+    };
+    console.log(data);
+    const response = await postWithCredentials(BACKEND_URL + "files/read", requestOptions);
+    return response;
+}
+export { fetchFiles, createFile, deleteFile, readFileContent }

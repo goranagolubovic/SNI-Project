@@ -8,7 +8,9 @@ export type ButtonType =
   | "add"
   | "cancel"
   | "true"
-  | "false";
+  | "false"
+  | "previous"
+  | "next";
 
 const buttonTypeClasses: Record<ButtonType, string> = {
   submit: styles.submit,
@@ -17,6 +19,8 @@ const buttonTypeClasses: Record<ButtonType, string> = {
   cancel: styles.cancel,
   true: styles.true,
   false: styles.false,
+  previous: styles.previous,
+  next: styles.next,
 };
 
 export interface ButtonProps

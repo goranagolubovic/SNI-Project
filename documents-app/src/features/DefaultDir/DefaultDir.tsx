@@ -24,11 +24,11 @@ const DefaultDir = () => {
   const [fileContent, setFileContent] = useState<any>("");
   const [previousFileContent, setPreviousFileContent] = useState<any>("");
   const [editFileContent, setEditFileContent] = useState(false);
-  const [isFileUploaded, setIsFileUploaded] = useState(false);
+  const [isDirContentChanged, setIsDirContentChanged] = useState(false);
   const user = JSON.parse(localStorage.getItem("USER") || "").user;
   const token = JSON.parse(localStorage.getItem("USER") || "").token;
   const defaultDir = user.userDir;
-  const [dir, setDir] = useState(defaultDir);
+  const [parentDir, setParentDir] = useState("");
   const [previousDir, setPreviousDir] = useState(defaultDir);
   const [tempPreviousDir, setTempPreviousDir] = useState(defaultDir);
   const [file, setFile] = useState("");
@@ -71,12 +71,11 @@ const DefaultDir = () => {
 
   const handleClick = (e: any) => {
     if (e.isDir === 1) {
-      setDir(e.name);
+      setParentDir(previousDir);
       setPreviousDir(previousDir + "/" + e.name);
       setFile("");
     } else {
-      setDir("");
-      setTempPreviousDir(previousDir);
+      setParentDir(previousDir);
       setPreviousDir(previousDir + "/" + e.name);
       setFile(e.name);
       readFile(e.name);
@@ -166,11 +165,18 @@ const DefaultDir = () => {
       });
   };
   useEffect(() => {
-    if (file === "" || isFileUploaded) {
-      setIsFileUploaded(false);
+    if (file === "" || isDirContentChanged) {
+      setIsDirContentChanged(false);
       getFiles(previousDir);
     }
-  }, [previousDir, file, isFileUploaded]);
+  }, [previousDir, file, isDirContentChanged]);
+
+  const getPreviousDir = () => {
+    console.log(parentDir);
+    console.log(previousDir);
+    setPreviousDir(parentDir);
+    setFile("");
+  };
 
   const onSubmit = async (data: CreateFileRequest) => {
     data.rootDir = previousDir;
@@ -182,7 +188,7 @@ const DefaultDir = () => {
     try {
       let res = await createFile(JSON.stringify(data));
       if (res.status === 200) {
-        getFiles(dir);
+        getFiles(previousDir);
       } else if (res.status === 403 || res.status === 401) {
         history.push("/");
       }
@@ -197,7 +203,7 @@ const DefaultDir = () => {
       let res = await deleteFile(JSON.stringify(previousDir));
       if (res.status === 200) {
         setFile("");
-        setPreviousDir(tempPreviousDir);
+        setPreviousDir(parentDir);
       } else if (
         res.status === 403 ||
         res.status === 401 ||
@@ -238,7 +244,7 @@ const DefaultDir = () => {
             if (status == 200) {
               console.log(myJson);
               alert(myJson);
-              setIsFileUploaded(true);
+              setIsDirContentChanged(true);
             } else {
               history.push("/");
             }
@@ -256,6 +262,14 @@ const DefaultDir = () => {
       {file === "" && (
         <div className={styles.centralContainer}>
           <div className={styles.actions}>
+            <div className={styles.actionsContent}>
+              {previousDir != defaultDir && (
+                <Button
+                  type={"previous"}
+                  onClick={() => getPreviousDir()}
+                ></Button>
+              )}
+            </div>
             <div className={styles.actionsContent}>
               {user.role !== "client" && (
                 <Button type="add" onClick={() => setIsFolderActive(true)}>
@@ -314,7 +328,7 @@ const DefaultDir = () => {
               {user.role === "client" && (
                 <div>
                   <Button type="add" onClick={() => findFileChooser()}>
-                    UPLOAD A NEW FILE
+                    FILE UPLOAD
                   </Button>
                   <input
                     type="file"
@@ -362,6 +376,14 @@ const DefaultDir = () => {
       <div className={styles.centralContainer}>
         {file !== "" && (
           <div className={styles.actions}>
+            <div className={styles.actionsContent}>
+              {previousDir != defaultDir && (
+                <Button
+                  type={"previous"}
+                  onClick={() => getPreviousDir()}
+                ></Button>
+              )}
+            </div>
             <div className={styles.actionsContent}>
               <Button type="add" onClick={() => saveFile()}>
                 DOWNLOAD FILE

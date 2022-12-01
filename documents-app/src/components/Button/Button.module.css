@@ -58,3 +58,21 @@
   border: none;
   margin-top: 0.3vw;
 }
+.previous {
+  width: 3vw;
+  height: 3vw;
+  /* background-color: aqua; */
+  background: url("../../../public/previous.png") no-repeat;
+  background-size: 3vw;
+  border: none;
+}
+
+.next {
+  width: 3vw;
+  height: 3vw;
+  /* background-color: aqua; */
+  background: url("../../../public/previous.png") no-repeat;
+  background-size: 3vw;
+  border: none;
+  transform: rotate(180deg);
+}

@@ -4,6 +4,7 @@
   font-size: 0.8vw;
   line-height: 1vw;
   text-align: center;
+  justify-content: center;
   border-radius: 0.2vw;
   width: 12.5vw;
   height: 2.5vw;
@@ -33,9 +34,8 @@
   display: flex;
   gap: 0.5vw;
   background-color: #aa7e74;
-  text-align: start;
-  padding-left: 0.8vw;
-  padding-top: 0.5vw;
+  justify-content: center;
+  align-items: center;
   color: white;
 }
 

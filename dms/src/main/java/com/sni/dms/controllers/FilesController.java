@@ -72,4 +72,10 @@ public class FilesController {
         filesService.uploadFile(file,folderName);
             return ResponseEntity.status(200).body("File is uploaded successfully!");
         }
+
+    @PostMapping(value = "/files/edit")
+    public ResponseEntity<String> editFile(@RequestBody  String data){
+        filesService.editFile(data);
+        return ResponseEntity.status(200).body("File is updated successfully!");
+    }
 }

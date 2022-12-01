@@ -53,4 +53,14 @@ const readFileContent = async (data: string) => {
 //     return response;
 // }
 
-export { fetchFiles, createFile, deleteFile, readFileContent }
+const editFile = async (data: any) => {
+    const requestOptions = {
+        headers,
+        body: data,
+    };
+    console.log(JSON.stringify(data));
+    const response = await postWithCredentials(BACKEND_URL + "files/edit", requestOptions);
+    return response;
+}
+
+export { fetchFiles, createFile, deleteFile, readFileContent, editFile }

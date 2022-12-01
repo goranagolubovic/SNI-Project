@@ -5,6 +5,7 @@ import com.sni.dms.entities.FileEntity;
 import com.sni.dms.entities.UserEntity;
 import com.sni.dms.repositories.FilesRepository;
 import com.sni.dms.requests.DownloadFileRequest;
+import com.sni.dms.requests.EditFileRequest;
 import com.sni.dms.requests.UploadFileRequest;
 import com.sni.dms.responses.FileResponse;
 import lombok.SneakyThrows;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
@@ -24,6 +26,8 @@ import java.util.stream.Collectors;
 @Service
 public class FilesService {
     private final FilesRepository filesRepository;
+    @Value("${regex}")
+    public String MATCH_ALL_REGEX;
 
     public FilesService(FilesRepository filesRepository){
         this.filesRepository=filesRepository;
@@ -123,6 +127,19 @@ public class FilesService {
         //mozda bude bespotrebno ovo
         fileEntity.setRootDir(getIdForDir(folderPath));
         filesRepository.save(fileEntity);
+    }
+
+    @SneakyThrows
+    public void editFile(String editFileRequestJson) {
+        System.out.println(editFileRequestJson);
+        EditFileRequest editFileRequest=new Gson().fromJson(editFileRequestJson, EditFileRequest.class);
+        File fileOld=new File(editFileRequest.getFilePath());
+        fileOld.delete();
+        File fileNew=new File(editFileRequest.getFilePath());
+
+            FileWriter fileWriter = new FileWriter(fileNew, false);
+            fileWriter.write(editFileRequest.getFileContent());
+            fileWriter.close();
     }
 
 

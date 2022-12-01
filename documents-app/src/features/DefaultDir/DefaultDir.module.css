@@ -2,6 +2,8 @@
   width: 100%;
   height: 100%;
   margin: 2vw;
+  display: flex;
+  flex-direction: column;
 }
 
 .container {
@@ -20,8 +22,8 @@
   float: right;
   display: flex;
   flex-direction: row;
-  gap: 3vw;
-  padding-right: 3vw;
+  width: 100%;
+  gap: 29%;
   /* background-color: aqua; */
 }
 
@@ -43,4 +45,26 @@
 .imageContainer {
   width: 20vw;
   height: 20vw;
+}
+
+.editFileContainer {
+  width: 70vw;
+  height: 30vw;
+  margin-top: 2vw !important;
+  margin: 10vw;
+  background-color: white;
+  padding: 2vw;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.editFileActions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 2vw;
+  width: 100%;
 }

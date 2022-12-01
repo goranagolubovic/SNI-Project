@@ -7,6 +7,7 @@ import { useHistory } from "react-router-dom";
 import {
   createFile,
   deleteFile,
+  editFile,
   readFileContent,
 } from "../../api/services/files";
 import { fetchFiles } from "../../api/services/files";
@@ -21,6 +22,8 @@ const DefaultDir = () => {
   const history = useHistory();
   const [files, setFiles] = useState([]);
   const [fileContent, setFileContent] = useState<any>("");
+  const [previousFileContent, setPreviousFileContent] = useState<any>("");
+  const [editFileContent, setEditFileContent] = useState(false);
   const [isFileUploaded, setIsFileUploaded] = useState(false);
   const user = JSON.parse(localStorage.getItem("USER") || "").user;
   const token = JSON.parse(localStorage.getItem("USER") || "").token;
@@ -53,6 +56,10 @@ const DefaultDir = () => {
     }
   };
 
+  const cancelEditing = () => {
+    setEditFileContent(false);
+    setFileContent(previousFileContent);
+  };
   // const previewAttachment = (event: any, file: any) => {
   //   event.preventDefault();
   //   let reader = new FileReader();
@@ -73,6 +80,25 @@ const DefaultDir = () => {
       setPreviousDir(previousDir + "/" + e.name);
       setFile(e.name);
       readFile(e.name);
+    }
+  };
+
+  const changeFile = async () => {
+    var data = {
+      filePath: previousDir,
+      fileContent: fileContent,
+    };
+    try {
+      let res = await editFile(JSON.stringify(data));
+      if (res.status === 200) {
+        setEditFileContent(false);
+        const message = await res.text();
+        alert(message);
+      } else if (res.status === 403 || res.status === 401) {
+        history.push("/");
+      }
+    } catch (err) {
+      console.log(err);
     }
   };
 
@@ -221,7 +247,10 @@ const DefaultDir = () => {
       };
     }
   };
-
+  const unableEditing = () => {
+    setEditFileContent(true);
+    setPreviousFileContent(fileContent);
+  };
   return (
     <div className={styles.centralContainer}>
       {file === "" && (
@@ -343,20 +372,56 @@ const DefaultDir = () => {
                 DELETE FILE
               </Button>
             </div>
+            <div className={styles.actionsContent}>
+              <Button type="add" onClick={() => unableEditing()}>
+                EDIT FILE
+              </Button>
+            </div>
           </div>
         )}
         {/* <iframe src={fileContent}></iframe> */}
-        {!file.endsWith(".png" || ".jpeg" || "jpg" || "svg") && (
-          <p>{fileContent}</p>
-        )}
-        {file.endsWith(".png" || ".jpeg" || "jpg" || "svg") && (
-          <div
-            className={styles.imageContainer}
-            style={{
-              backgroundImage: "url(" + fileContent + ")",
-              backgroundSize: "20vw",
-            }}
-          ></div>
+        {file != "" && (
+          <div className={styles.editFileContainer}>
+            {!file.endsWith(".png" || ".jpeg" || "jpg" || "svg") &&
+              !editFileContent && <p>{fileContent}</p>}
+            {file.endsWith(".png" || ".jpeg" || "jpg" || "svg") &&
+              !editFileContent && (
+                <div
+                  className={styles.imageContainer}
+                  style={{
+                    backgroundImage: "url(" + fileContent + ")",
+                    backgroundSize: "20vw",
+                  }}
+                ></div>
+              )}
+            {!file.endsWith(".png" || ".jpeg" || "jpg" || "svg") &&
+              editFileContent && (
+                <textarea
+                  value={fileContent}
+                  onChange={(e) => setFileContent(e.target?.value)}
+                ></textarea>
+              )}
+            {file.endsWith(".png" || ".jpeg" || "jpg" || "svg") &&
+              editFileContent && (
+                <div
+                  className={styles.imageContainer}
+                  style={{
+                    backgroundImage: "url(" + fileContent + ")",
+                    backgroundSize: "20vw",
+                  }}
+                ></div>
+              )}
+            {editFileContent && (
+              <div className={styles.editFileActions}>
+                <Button type="add" onClick={() => changeFile()}>
+                  SAVE
+                </Button>
+                <Button type="add" onClick={() => cancelEditing()}>
+                  CANCEL
+                </Button>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>

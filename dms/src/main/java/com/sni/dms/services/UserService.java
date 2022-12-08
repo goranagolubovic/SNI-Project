@@ -8,6 +8,7 @@ import com.sni.dms.requests.LoginRequest;
 import com.sni.dms.responses.LoginResponse;
 import com.sni.dms.service.KeycloakAdminClientService;
 import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.RoleRepresentation;
@@ -30,15 +31,14 @@ public class UserService {
 
    private UserRepository repository;
     private final KeycloakProvider kcProvider;
-    private KeycloakAdminClientService keycloakAdminClientService;
+
 
 
     private Path root;
 
-    public UserService(UserRepository repository, KeycloakProvider kcProvider, KeycloakAdminClientService keycloakAdminClientService, @Value("${PATH}") String path){
+    public UserService(UserRepository repository, KeycloakProvider kcProvider, @Value("${PATH}") String path){
         this.repository=repository;
         this.kcProvider=kcProvider;
-        this.keycloakAdminClientService=keycloakAdminClientService;
         this.root = Paths.get(path);
     }
     public LoginResponse login(LoginRequest loginRequest) {
@@ -95,25 +95,21 @@ public class UserService {
         return false;
     }
     public UserEntity updateUser(UserEntity user){
-    if(this.keycloakAdminClientService.updateKeyCloakUser(user)) {
-        UserEntity e = getUser(user.getUsername());
-        if (e != null) {
-            e.setUsername(user.getUsername());
-            e.setPassword((user.getPassword()));
-            e.setRole(user.getRole());
-            e.setIpAddress(user.getIpAddress());
-            e.setUserDir(user.getUserDir());
-            e.setIsCreateApproved(user.getIsCreateApproved());
-            e.setIsReadApproved(user.getIsReadApproved());
-            e.setIsUpdateApproved(user.getIsUpdateApproved());
-            e.setIsDeleteApproved(user.getIsDeleteApproved());
-            return repository.save(e);
-        }
-        return null;
-    }
-    else{
-        return null;
-    }
+            UserEntity e = getUser(user.getUsername());
+            if (e != null) {
+                e.setUsername(user.getUsername());
+                e.setPassword((user.getPassword()));
+                e.setRole(user.getRole());
+                e.setIpAddress(user.getIpAddress());
+                e.setUserDir(user.getUserDir());
+                e.setIsCreateApproved(user.getIsCreateApproved());
+                e.setIsReadApproved(user.getIsReadApproved());
+                e.setIsUpdateApproved(user.getIsUpdateApproved());
+                e.setIsDeleteApproved(user.getIsDeleteApproved());
+                return repository.save(e);
+            }
+            return null;
+
     }
 
     public UserEntity getUser(String username) {
@@ -129,5 +125,30 @@ public class UserService {
         System.out.println(userDir);
                File file=new File(userDir);
                file.mkdirs();
+    }
+
+    public static void assignCRUDPrivilegis(UserEntity user) {
+        UserRepresentation userRepresentation=getKeyCloakUser(user.getUsername());
+        UsersResource usersResource=getUsersFromKeyCloak();
+        UserResource userResource = usersResource.get(userRepresentation.getId());
+        if(user.getIsCreateApproved()!=null && user.getIsCreateApproved()==1){
+            userResource.roles().realmLevel().add(getRealmRole("create"));
+        }
+        if(user.getIsReadApproved()!=null && user.getIsReadApproved()==1){
+            userResource.roles().realmLevel().add(getRealmRole("read"));
+        }
+        if(user.getIsUpdateApproved()!=null && user.getIsUpdateApproved()==1){
+            userResource.roles().realmLevel().add(getRealmRole("update"));
+        }
+        if(user.getIsDeleteApproved()!=null && user.getIsDeleteApproved()==1){
+            userResource.roles().realmLevel().add(getRealmRole("delete"));
+        }
+    }
+
+    public static void assignRole(UserEntity user) {
+        UserRepresentation userRepresentation=getKeyCloakUser(user.getUsername());
+        UsersResource usersResource= getUsersFromKeyCloak();
+        UserResource userResource = usersResource.get(userRepresentation.getId());
+        userResource.roles().realmLevel().add(getRealmRole(user.getRole()));
     }
 }

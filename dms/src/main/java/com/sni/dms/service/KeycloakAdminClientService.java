@@ -24,7 +24,7 @@ public class KeycloakAdminClientService {
     private final KeycloakProvider kcProvider;
 
 
-    public KeycloakAdminClientService(KeycloakProvider keycloakProvider) {
+    public KeycloakAdminClientService(KeycloakProvider keycloakProvider,UserService userService) {
         this.kcProvider = keycloakProvider;
     }
 

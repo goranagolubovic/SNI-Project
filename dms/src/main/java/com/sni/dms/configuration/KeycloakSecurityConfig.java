@@ -28,8 +28,13 @@ public class KeycloakSecurityConfig extends KeycloakWebSecurityConfigurerAdapter
                 .antMatchers("/public/**").permitAll()
                 .antMatchers("/member/**").hasAnyRole("member")
                 .antMatchers("/moderator/**").hasAnyRole("moderator")
+                .antMatchers("/auth").permitAll()
                 .antMatchers("/admin/*").hasRole("admin")
-                .antMatchers("/files/*").hasAnyRole("admin","client","document-admin")
+                .antMatchers("/files/all").hasAnyRole("admin","client","document_admin")
+                .antMatchers("/files/upload").hasAnyRole("admin","create","document_admin")
+                .antMatchers("/files/read").hasAnyRole("admin","read","document_admin")
+                .antMatchers("/files/edit").hasAnyRole("admin","update","document_admin")
+                .antMatchers("/files/delete").hasAnyRole("admin","delete","document_admin")
                .anyRequest().permitAll();
         http.csrf().disable();
     }

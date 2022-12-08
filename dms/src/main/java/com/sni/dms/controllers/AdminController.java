@@ -1,5 +1,6 @@
 package com.sni.dms.controllers;
 
+import com.google.common.hash.Hashing;
 import com.sni.dms.entities.FileEntity;
 import com.sni.dms.entities.UserEntity;
 import com.sni.dms.repositories.UserRepository;
@@ -17,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.ws.rs.core.Response;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
@@ -55,14 +57,15 @@ public class AdminController {
         filesService.addNewFile(fileEntity);
         Response createdResponse = kcAdminClient.createKeycloakUser(userRequest);
 
-        UserRepresentation userRepresentation=service.getKeyCloakUser(user.getUsername());
-        UsersResource usersResource= service.getUsersFromKeyCloak();
-        UserResource userResource = usersResource.get(userRepresentation.getId());
-        userResource.roles().realmLevel().add(service.getRealmRole(user.getRole()));
+
+        service.assignRole(user);
+        service.assignCRUDPrivilegis(user);
+
         int result=createdResponse.getStatus();
         if(result==409){
             return ResponseEntity.status(409).build();
         }
+        user.setPassword(Hashing.sha512().hashString(user.getPassword(), StandardCharsets.UTF_8).toString());
         return ResponseEntity.ok(repository.save(user));
     }
 
@@ -74,13 +77,20 @@ public class AdminController {
 
     @PutMapping("/admin/users")
     public ResponseEntity<UserEntity>updateUser(@RequestBody UserEntity user){
-    UserEntity userResponse=service.updateUser(user);
-    if(userResponse==null){
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-    }
-    else{
-        return new ResponseEntity<>(userResponse, HttpStatus.OK);
-    }
+        UserEntity userResponse = service.updateUser(user);
+        if(kcAdminClient.updateKeyCloakUser(user) && userResponse!=null) {
+
+
+//        service.assignRole(user);
+//        service.assignCRUDPrivilegis(user);
+
+
+                return new ResponseEntity<>(userResponse, HttpStatus.OK);
+
+        }
+        else{
+            return new ResponseEntity<>( HttpStatus.NOT_FOUND);
+        }
     }
     @DeleteMapping(value = "/admin/users/{username}")
     public ResponseEntity<String> deleteUser(@PathVariable String username) {

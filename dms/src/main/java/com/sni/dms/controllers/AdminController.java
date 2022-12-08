@@ -40,6 +40,8 @@ public class AdminController {
     @PostMapping("/admin/users")
     public ResponseEntity<UserEntity> saveUser(@RequestBody UserEntity user){
         System.out.println("try");
+        user.setPassword(Hashing.sha512().hashString(user.getPassword(), StandardCharsets.UTF_8).toString());
+
         CreateUserRequest userRequest=new CreateUserRequest();
         userRequest.setUsername(user.getUsername());
         userRequest.setPassword(user.getPassword());
@@ -65,7 +67,7 @@ public class AdminController {
         if(result==409){
             return ResponseEntity.status(409).build();
         }
-        user.setPassword(Hashing.sha512().hashString(user.getPassword(), StandardCharsets.UTF_8).toString());
+
         return ResponseEntity.ok(repository.save(user));
     }
 
@@ -77,15 +79,23 @@ public class AdminController {
 
     @PutMapping("/admin/users")
     public ResponseEntity<UserEntity>updateUser(@RequestBody UserEntity user){
+        //ako je prazno polje sifra, ostavi staru sifru
+        if("".equals(user.getPassword())){
+            user.setPassword(service.getOldPassword(user));
+        }
+        //ako nije sacuvaj hash lozinke u bazu
+        else{
+            user.setPassword(Hashing.sha512().hashString(user.getPassword(), StandardCharsets.UTF_8).toString());
+        }
         UserEntity userResponse = service.updateUser(user);
         if(kcAdminClient.updateKeyCloakUser(user) && userResponse!=null) {
 
 
-//        service.assignRole(user);
-//        service.assignCRUDPrivilegis(user);
+        service.assignRole(user);
+        service.assignCRUDPrivilegis(user);
 
 
-                return new ResponseEntity<>(userResponse, HttpStatus.OK);
+            return new ResponseEntity<>(userResponse, HttpStatus.OK);
 
         }
         else{

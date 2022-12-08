@@ -101,14 +101,14 @@ const UpdateUser = () => {
     if (userData.username === "") {
       userData.username = username;
     }
-    if (userData.password === "") {
-      userData.password = password;
-    }
     if (userData.role === "client") {
       userData.isReadApproved = isReadAllowed ? 1 : 0;
       userData.isCreateApproved = isCreateAllowed ? 1 : 0;
       userData.isUpdateApproved = isUpdateAllowed ? 1 : 0;
       userData.isDeleteApproved = isDeleteAllowed ? 1 : 0;
+    }
+    if (userData.userDir === "") {
+      userData.userDir = userDir;
     }
     alert(JSON.stringify(userData));
     try {

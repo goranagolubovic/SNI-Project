@@ -29,7 +29,7 @@ import java.util.Optional;
 @Service
 public class UserService {
 
-   private UserRepository repository;
+    private UserRepository repository;
     private final KeycloakProvider kcProvider;
 
 
@@ -42,6 +42,7 @@ public class UserService {
         this.root = Paths.get(path);
     }
     public LoginResponse login(LoginRequest loginRequest) {
+       // getUsersFromKeyCloak().get(getKeyCloakUser(loginRequest.getUsername()).getCredentials().get(0).getValue());
         String hashReqPassword = Hashing.sha512().hashString(loginRequest.getPassword(), StandardCharsets.UTF_8).toString();
         System.out.println(hashReqPassword);
         Optional<UserEntity> user = repository.findAll().stream()
@@ -52,7 +53,7 @@ public class UserService {
         Keycloak keycloak = null;
         if (user.isPresent()) {
             System.out.println("yes");
-            keycloak = kcProvider.newKeycloakBuilderWithPasswordCredentials(loginRequest.getUsername(), loginRequest.getPassword()).build();
+            keycloak = kcProvider.newKeycloakBuilderWithPasswordCredentials(loginRequest.getUsername(), hashReqPassword).build();
 
             try {
                 accessTokenResponse = keycloak.tokenManager().getAccessToken();
@@ -72,7 +73,7 @@ public class UserService {
 
         Optional<org.keycloak.representations.idm.UserRepresentation> user = getUsersFromKeyCloak().list().stream().filter(elem->elem.getUsername().equals(username)).findAny();
         if(user.isPresent())
-        return  user.get();
+            return  user.get();
         else
             return null;
     }
@@ -87,28 +88,29 @@ public class UserService {
     public boolean delete(String username) {
         Optional<UserEntity> user = repository.findAll().stream()
                 .filter(elem -> elem.getUsername().equals(username)).findAny();
-                if(user.isPresent()){
-                    repository.delete(user.get());
-                    getUsersFromKeyCloak().get(getKeyCloakUser(username).getId()).remove();
-                    return  true;
-                }
+        if(user.isPresent()){
+            repository.delete(user.get());
+            getUsersFromKeyCloak().get(getKeyCloakUser(username).getId()).remove();
+            return  true;
+        }
         return false;
     }
     public UserEntity updateUser(UserEntity user){
-            UserEntity e = getUser(user.getUsername());
-            if (e != null) {
-                e.setUsername(user.getUsername());
-                e.setPassword((user.getPassword()));
-                e.setRole(user.getRole());
-                e.setIpAddress(user.getIpAddress());
-                e.setUserDir(user.getUserDir());
-                e.setIsCreateApproved(user.getIsCreateApproved());
-                e.setIsReadApproved(user.getIsReadApproved());
-                e.setIsUpdateApproved(user.getIsUpdateApproved());
-                e.setIsDeleteApproved(user.getIsDeleteApproved());
-                return repository.save(e);
-            }
-            return null;
+
+        UserEntity e = getUser(user.getUsername());
+        if (e != null) {
+            e.setUsername(user.getUsername());
+            e.setPassword((user.getPassword()));
+            e.setRole(user.getRole());
+            e.setIpAddress(user.getIpAddress());
+            e.setUserDir(user.getUserDir());
+            e.setIsCreateApproved(user.getIsCreateApproved());
+            e.setIsReadApproved(user.getIsReadApproved());
+            e.setIsUpdateApproved(user.getIsUpdateApproved());
+            e.setIsDeleteApproved(user.getIsDeleteApproved());
+            return repository.save(e);
+        }
+        return null;
 
     }
 
@@ -116,15 +118,15 @@ public class UserService {
         Optional<UserEntity> user = repository.findAll().stream()
                 .filter(elem -> elem.getUsername().equals(username)).findAny();
         if(user.isPresent()){
-           return user.get();
+            return user.get();
         }
         return null;
     }
 
     public void createDefaultDirForUser(String userDir) {
         System.out.println(userDir);
-               File file=new File(userDir);
-               file.mkdirs();
+        File file=new File(userDir);
+        file.mkdirs();
     }
 
     public static void assignCRUDPrivilegis(UserEntity user) {
@@ -150,5 +152,12 @@ public class UserService {
         UsersResource usersResource= getUsersFromKeyCloak();
         UserResource userResource = usersResource.get(userRepresentation.getId());
         userResource.roles().realmLevel().add(getRealmRole(user.getRole()));
+    }
+
+    public String getOldPassword(UserEntity user){
+
+        Optional<UserEntity> optUser= repository.findAll().stream()
+                .filter(e->e.getUsername().equals(user.getUsername())).findAny();
+        return optUser.isPresent() ? optUser.get().getPassword() : "";
     }
 }

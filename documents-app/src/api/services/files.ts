@@ -44,6 +44,23 @@ const readFileContent = async (data: string) => {
     return response;
 }
 
+const fetchAvailableDirs = async (data: any) => {
+    const requestOptions = {
+        headers,
+        body: data,
+    };
+    const response = await postWithCredentials(BACKEND_URL + "files/availableDirs", requestOptions);
+    return response;
+}
+const moveFileTo = async (data: any) => {
+    console.log(data)
+    const requestOptions = {
+        headers,
+        body: data,
+    };
+    const response = await postWithCredentials(BACKEND_URL + "files/sendTo", requestOptions);
+    return response;
+}
 // const uploadFile = async (data: any) => {
 //     const requestOptions = {
 //         body: data,
@@ -72,4 +89,4 @@ const getParentDir = async (currentDir: string) => {
     return response;
 }
 
-export { fetchFiles, createFile, deleteFile, readFileContent, editFile, getParentDir }
+export { fetchFiles, createFile, deleteFile, readFileContent, editFile, getParentDir, fetchAvailableDirs, moveFileTo }

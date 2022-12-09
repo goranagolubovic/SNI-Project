@@ -50,10 +50,11 @@
 }
 
 .editFileContainer {
-  width: 70vw;
+  width: 65vw;
   height: 30vw;
   margin-top: 2vw !important;
   margin: 10vw;
+  margin-left: 12vw !important;
   background-color: white;
   padding: 2vw;
   overflow: auto;

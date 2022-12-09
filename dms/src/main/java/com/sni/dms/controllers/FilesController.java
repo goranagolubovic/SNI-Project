@@ -1,6 +1,7 @@
 package com.sni.dms.controllers;
 
 import com.sni.dms.entities.FileEntity;
+import com.sni.dms.requests.AvailableDirsRequest;
 import com.sni.dms.requests.CreateFileRequest;
 import com.sni.dms.requests.UploadFileRequest;
 import com.sni.dms.responses.FileResponse;
@@ -81,7 +82,19 @@ public class FilesController {
 
     @PostMapping(value = "/files/parentDir")
     public ResponseEntity<String> findParentDir(@RequestBody  String currentDirJSON){
+        System.out.println(currentDirJSON);
         String pathToParent=filesService.getParentDir(currentDirJSON);
         return ResponseEntity.status(200).body(pathToParent);
+    }
+
+    @PostMapping(value = "/files/availableDirs")
+    public ResponseEntity<List<String>> findAvailableDirs(@RequestBody String availableDirsRequestJSON){
+         List<String> availableDirs=filesService.getAvailableDirs(availableDirsRequestJSON);
+        return ResponseEntity.status(200).body(availableDirs);
+    }
+    @PostMapping(value = "/files/sendTo")
+    public ResponseEntity<String> moveFile(@RequestBody String data){
+        filesService.moveFile(data);
+        return ResponseEntity.status(200).body("Moved");
     }
 }

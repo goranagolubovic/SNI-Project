@@ -8,7 +8,9 @@ import {
   createFile,
   deleteFile,
   editFile,
+  fetchAvailableDirs,
   getParentDir,
+  moveFileTo,
   readFileContent,
 } from "../../api/services/files";
 import { fetchFiles } from "../../api/services/files";
@@ -16,13 +18,16 @@ import { Button } from "../../components/Button/Button";
 import ErrorComponent from "../../components/ErrorComponent/ErrorComponent";
 import File from "../../components/FileComponent/FileComponent";
 import FileInput from "../../components/FileInput/FileInput";
-import { BACKEND_URL } from "../../constants";
+import Select from "../../components/Select/Select";
+import { BACKEND_URL, DELETE_FOLDER_MESSAGE } from "../../constants";
+import { AvailableDirsRequest } from "../../models/AvailableDirsRequest";
 import { CreateFileRequest } from "../../models/CreateFileRequest";
 import styles from "./DefaultDir.module.css";
 const DefaultDir = () => {
   const history = useHistory();
   const [files, setFiles] = useState([]);
   const [fileContent, setFileContent] = useState<any>("");
+  const [availableDirs, setAvailableDirs] = useState([]);
   const [previousFileContent, setPreviousFileContent] = useState<any>("");
   const [editFileContent, setEditFileContent] = useState(false);
   const [isDirContentChanged, setIsDirContentChanged] = useState(false);
@@ -47,6 +52,25 @@ const DefaultDir = () => {
         const data = await res.json();
         console.log(data);
         setFiles(data);
+      } else if (res.status === 403 || res.status === 401) {
+        history.push("/");
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const getAvailableDirs = async () => {
+    try {
+      const data = {
+        userDir: defaultDir,
+        currentDir: currentDir,
+      };
+      let res = await fetchAvailableDirs(JSON.stringify(data));
+      if (res.status === 200) {
+        const data = await res.json();
+        console.log(data);
+        setAvailableDirs(data);
       } else if (res.status === 403 || res.status === 401) {
         history.push("/");
       }
@@ -165,6 +189,7 @@ const DefaultDir = () => {
     if (file === "" || isDirContentChanged) {
       setIsDirContentChanged(false);
       getFiles(currentDir);
+      getAvailableDirs();
     }
   }, [currentDir, file, isDirContentChanged]);
 
@@ -209,10 +234,10 @@ const DefaultDir = () => {
   const removeFile = async () => {
     try {
       console.log(currentDir);
+      getPreviousDir();
       let res = await deleteFile(JSON.stringify(currentDir));
       if (res.status === 200) {
         setFile("");
-        getPreviousDir();
       } else if (
         res.status === 403 ||
         res.status === 401 ||
@@ -224,6 +249,7 @@ const DefaultDir = () => {
       console.log(err);
     }
   };
+
   const findFileChooser = () => {
     document.getElementById("getFile")?.click();
   };
@@ -266,6 +292,31 @@ const DefaultDir = () => {
     setEditFileContent(true);
     setPreviousFileContent(fileContent);
   };
+  const handleFolderDelete = (): void => {
+    if (window.confirm(DELETE_FOLDER_MESSAGE)) {
+      removeFile();
+    }
+  };
+
+  const sendFileTo = async (value: any) => {
+    const pathToFileToMove = currentDir;
+    getPreviousDir();
+    getFiles(currentDir);
+    try {
+      const data = {
+        destinationDir: value,
+        filePath: pathToFileToMove,
+        fileName: file,
+      };
+      let res = await moveFileTo(JSON.stringify(data));
+      if (res.status === 403 || res.status === 401) {
+        history.push("/");
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   return (
     <div className={styles.centralContainer}>
       {file === "" && (
@@ -308,65 +359,23 @@ const DefaultDir = () => {
             </div>
             <div className={styles.actionsContent}>
               {user.role !== "client" && (
-                <Button type="add" onClick={() => setIsFileActive(true)}>
-                  CREATE A NEW FILE
+                <Button type="add" onClick={() => handleFolderDelete()}>
+                  DELETE FOLDER
                 </Button>
-              )}
-              {isAddFileActive && (
-                <div>
-                  <form
-                    className={styles.controls}
-                    onSubmit={handleSubmit((data) => onSubmit(data))}
-                  >
-                    <FileInput
-                      placeholder={"Name"}
-                      {...register("name", {
-                        required: true,
-                      })}
-                    ></FileInput>
-                    <Button type={"true"} />
-                    <Button
-                      type={"false"}
-                      onClick={() => setIsFileActive(false)}
-                    ></Button>
-                  </form>
-                </div>
               )}
             </div>
             <div className={styles.actionsContent}>
-              {user.role === "client" && (
-                <div>
-                  <Button type="add" onClick={() => findFileChooser()}>
-                    FILE UPLOAD
-                  </Button>
-                  <input
-                    type="file"
-                    id="getFile"
-                    className={styles.fileInput}
-                    onChange={(e) => chooseFile(e)}
-                  />
-                </div>
-              )}
-              {isAddFOlderActive && (
-                <div>
-                  <form
-                    className={styles.controls}
-                    onSubmit={handleSubmit((data) => onSubmit(data))}
-                  >
-                    <FileInput
-                      placeholder={"Name"}
-                      {...register("name", {
-                        required: true,
-                      })}
-                    ></FileInput>
-                    <Button type={"true"} />
-                    <Button
-                      type={"false"}
-                      onClick={() => setIsFolderActive(false)}
-                    ></Button>
-                  </form>
-                </div>
-              )}
+              <div>
+                <Button type="add" onClick={() => findFileChooser()}>
+                  FILE UPLOAD
+                </Button>
+                <input
+                  type="file"
+                  id="getFile"
+                  className={styles.fileInput}
+                  onChange={(e) => chooseFile(e)}
+                />
+              </div>
             </div>
           </div>
 
@@ -407,6 +416,14 @@ const DefaultDir = () => {
               <Button type="add" onClick={() => unableEditing()}>
                 EDIT FILE
               </Button>
+            </div>
+            <div className={styles.actionsContent}>
+              <Select
+                text="SEND TO"
+                values={availableDirs}
+                className={""}
+                onChange={(e: any) => sendFileTo(e.target.value)}
+              ></Select>
             </div>
           </div>
         )}

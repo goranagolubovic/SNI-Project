@@ -4,9 +4,7 @@ import com.google.gson.Gson;
 import com.sni.dms.entities.FileEntity;
 import com.sni.dms.entities.UserEntity;
 import com.sni.dms.repositories.FilesRepository;
-import com.sni.dms.requests.DownloadFileRequest;
-import com.sni.dms.requests.EditFileRequest;
-import com.sni.dms.requests.UploadFileRequest;
+import com.sni.dms.requests.*;
 import com.sni.dms.responses.FileResponse;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
@@ -18,7 +16,11 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -143,9 +145,39 @@ public class FilesService {
     }
 
     public String getParentDir(String currentDirJSON) {
+        System.out.println(currentDirJSON);
         String currentDir=new Gson().fromJson(currentDirJSON,String.class);
         int index= filesRepository.findAll().stream().filter(elem->elem.getName().equals(currentDir)).findAny().get().getRootDir();
         return  filesRepository.findById(index).get().getName();
+    }
+
+    public List<String> getAvailableDirs(String availableDirsRequestJSON) {
+        AvailableDirsRequest availableDirsRequest=new Gson().fromJson(availableDirsRequestJSON,AvailableDirsRequest.class);
+        String currentDir=availableDirsRequest.getCurrentDir();
+        System.out.println("Now in"+currentDir);
+        String userDir = availableDirsRequest.getUserDir();
+        List<FileEntity> availableDirs = filesRepository.findAll().stream().filter(elem -> !(elem.getName().equals(currentDir)) && elem.getIsDir() == 1 && elem.getName().startsWith(userDir)).collect(Collectors.toList());
+        return availableDirs.stream().map(elem -> elem.getName()).collect(Collectors.toList());
+    }
+
+    @SneakyThrows
+    public void moveFile(String data) {
+        MoveFileRequest moveFileRequest=new Gson().fromJson(data,MoveFileRequest.class);
+        String destinationDirPath=moveFileRequest.getDestinationDir();
+        String filePath = moveFileRequest.getFilePath();
+        String fileName=moveFileRequest.getFileName();
+        File newFile=new File(destinationDirPath+"/"+fileName);
+        newFile.createNewFile();
+        File oldFile=new File(filePath);
+        FileUtils.copyFile(oldFile, newFile);
+        oldFile.delete();
+
+
+        FileEntity fileEntity=filesRepository.findAll().stream().filter(elem->elem.getName().equals(filePath)).findAny().get();
+        fileEntity.setName(destinationDirPath+"/"+fileName);
+        fileEntity.setRootDir(getIdForDir(destinationDirPath));
+        filesRepository.save(fileEntity);
+
     }
 
 

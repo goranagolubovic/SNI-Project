@@ -1,13 +1,25 @@
 .select {
-  width: 15.1vw;
-  height: 2.5vw;
-  padding-left: 0.9vw;
-  padding-right: 0.2vw;
-  border-radius: 0.2vw;
+  font-weight: 700;
   font-size: 0.8vw;
-  background-color: #f5f5f5 !important;
+  line-height: 1vw;
+  text-align: center;
+  justify-content: center;
+  border-radius: 0.2vw;
+  width: 12.5vw;
+  height: 2.5vw;
   border: none;
-  color: #8892b5;
+  cursor: pointer;
+
+  display: flex;
+  gap: 0.5vw !important;
+  background-color: #aa7e74 !important;
+  justify-content: center !important;
+  align-items: center !important;
+  color: white;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 /* .select {

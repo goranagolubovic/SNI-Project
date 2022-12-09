@@ -142,6 +142,12 @@ public class FilesService {
             fileWriter.close();
     }
 
+    public String getParentDir(String currentDirJSON) {
+        String currentDir=new Gson().fromJson(currentDirJSON,String.class);
+        int index= filesRepository.findAll().stream().filter(elem->elem.getName().equals(currentDir)).findAny().get().getRootDir();
+        return  filesRepository.findById(index).get().getName();
+    }
+
 
 //    private boolean checkIfFileIsInUserDir(String userDir, File file)
 //    {

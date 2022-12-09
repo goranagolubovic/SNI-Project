@@ -63,4 +63,13 @@ const editFile = async (data: any) => {
     return response;
 }
 
-export { fetchFiles, createFile, deleteFile, readFileContent, editFile }
+const getParentDir = async (currentDir: string) => {
+    const requestOptions = {
+        headers,
+        body: currentDir,
+    };
+    const response = await postWithCredentials(BACKEND_URL + "files/parentDir", requestOptions);
+    return response;
+}
+
+export { fetchFiles, createFile, deleteFile, readFileContent, editFile, getParentDir }

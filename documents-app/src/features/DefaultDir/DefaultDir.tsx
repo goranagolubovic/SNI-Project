@@ -8,6 +8,7 @@ import {
   createFile,
   deleteFile,
   editFile,
+  getParentDir,
   readFileContent,
 } from "../../api/services/files";
 import { fetchFiles } from "../../api/services/files";
@@ -28,9 +29,7 @@ const DefaultDir = () => {
   const user = JSON.parse(localStorage.getItem("USER") || "").user;
   const token = JSON.parse(localStorage.getItem("USER") || "").token;
   const defaultDir = user.userDir;
-  const [parentDir, setParentDir] = useState("");
-  const [previousDir, setPreviousDir] = useState(defaultDir);
-  const [tempPreviousDir, setTempPreviousDir] = useState(defaultDir);
+  const [currentDir, setCurrentDir] = useState(defaultDir);
   const [file, setFile] = useState("");
   const [isAddFileActive, setIsFileActive] = useState(false);
   const [isAddFOlderActive, setIsFolderActive] = useState(false);
@@ -43,7 +42,7 @@ const DefaultDir = () => {
 
   const getFiles = async (dir: string) => {
     try {
-      let res = await fetchFiles(JSON.stringify(previousDir));
+      let res = await fetchFiles(JSON.stringify(currentDir));
       if (res.status === 200) {
         const data = await res.json();
         console.log(data);
@@ -71,12 +70,10 @@ const DefaultDir = () => {
 
   const handleClick = (e: any) => {
     if (e.isDir === 1) {
-      setParentDir(previousDir);
-      setPreviousDir(previousDir + "/" + e.name);
+      setCurrentDir(currentDir + "/" + e.name);
       setFile("");
     } else {
-      setParentDir(previousDir);
-      setPreviousDir(previousDir + "/" + e.name);
+      setCurrentDir(currentDir + "/" + e.name);
       setFile(e.name);
       readFile(e.name);
     }
@@ -84,7 +81,7 @@ const DefaultDir = () => {
 
   const changeFile = async () => {
     var data = {
-      filePath: previousDir,
+      filePath: currentDir,
       fileContent: fileContent,
     };
     try {
@@ -111,7 +108,7 @@ const DefaultDir = () => {
   const readFile = async (fileName: string) => {
     var data = {
       userDir: defaultDir,
-      filePath: previousDir + "/" + fileName,
+      filePath: currentDir + "/" + fileName,
     };
     try {
       console.log(JSON.stringify(data));
@@ -143,7 +140,7 @@ const DefaultDir = () => {
     console.log(token);
     var data = {
       userDir: defaultDir,
-      filePath: previousDir,
+      filePath: currentDir,
     };
     fetch(BACKEND_URL + "files/read", {
       method: "POST",
@@ -167,19 +164,31 @@ const DefaultDir = () => {
   useEffect(() => {
     if (file === "" || isDirContentChanged) {
       setIsDirContentChanged(false);
-      getFiles(previousDir);
+      getFiles(currentDir);
     }
-  }, [previousDir, file, isDirContentChanged]);
+  }, [currentDir, file, isDirContentChanged]);
 
-  const getPreviousDir = () => {
-    console.log(parentDir);
-    console.log(previousDir);
-    setPreviousDir(parentDir);
+  const getPreviousDir = async () => {
+    try {
+      let res = await getParentDir(JSON.stringify(currentDir));
+      if (res.status === 200) {
+        const previousDir = await res.text();
+        setCurrentDir(previousDir);
+      } else if (
+        res.status === 403 ||
+        res.status === 401 ||
+        res.status === 404
+      ) {
+        history.push("/");
+      }
+    } catch (err) {
+      console.log(err);
+    }
     setFile("");
   };
 
   const onSubmit = async (data: CreateFileRequest) => {
-    data.rootDir = previousDir;
+    data.rootDir = currentDir;
     data.isDir = isAddFOlderActive ? 1 : 0;
 
     setIsFolderActive(false);
@@ -188,7 +197,7 @@ const DefaultDir = () => {
     try {
       let res = await createFile(JSON.stringify(data));
       if (res.status === 200) {
-        getFiles(previousDir);
+        getFiles(currentDir);
       } else if (res.status === 403 || res.status === 401) {
         history.push("/");
       }
@@ -199,11 +208,11 @@ const DefaultDir = () => {
 
   const removeFile = async () => {
     try {
-      console.log(previousDir);
-      let res = await deleteFile(JSON.stringify(previousDir));
+      console.log(currentDir);
+      let res = await deleteFile(JSON.stringify(currentDir));
       if (res.status === 200) {
         setFile("");
-        setPreviousDir(parentDir);
+        getPreviousDir();
       } else if (
         res.status === 403 ||
         res.status === 401 ||
@@ -225,7 +234,7 @@ const DefaultDir = () => {
       const fileChoosed = e.target.files[0];
       reader.readAsDataURL(fileChoosed);
       let formData = new FormData();
-      formData.append("folderName", previousDir);
+      formData.append("folderName", currentDir);
       formData.append("file", fileChoosed);
 
       reader.onloadend = async () => {
@@ -263,7 +272,7 @@ const DefaultDir = () => {
         <div className={styles.centralContainer}>
           <div className={styles.actions}>
             <div className={styles.actionsContent}>
-              {previousDir != defaultDir && (
+              {currentDir != defaultDir && (
                 <Button
                   type={"previous"}
                   onClick={() => getPreviousDir()}
@@ -377,7 +386,7 @@ const DefaultDir = () => {
         {file !== "" && (
           <div className={styles.actions}>
             <div className={styles.actionsContent}>
-              {previousDir != defaultDir && (
+              {currentDir != defaultDir && (
                 <Button
                   type={"previous"}
                   onClick={() => getPreviousDir()}

@@ -78,4 +78,10 @@ public class FilesController {
         filesService.editFile(data);
         return ResponseEntity.status(200).body("File is updated successfully!");
     }
+
+    @PostMapping(value = "/files/parentDir")
+    public ResponseEntity<String> findParentDir(@RequestBody  String currentDirJSON){
+        String pathToParent=filesService.getParentDir(currentDirJSON);
+        return ResponseEntity.status(200).body(pathToParent);
+    }
 }

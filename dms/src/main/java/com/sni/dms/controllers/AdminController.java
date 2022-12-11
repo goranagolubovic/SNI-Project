@@ -8,11 +8,7 @@ import com.sni.dms.requests.CreateUserRequest;
 import com.sni.dms.service.KeycloakAdminClientService;
 import com.sni.dms.services.FilesService;
 import com.sni.dms.services.UserService;
-import org.keycloak.admin.client.resource.UserResource;
-import org.keycloak.admin.client.resource.UsersResource;
-import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -50,11 +46,16 @@ public class AdminController {
         userRequest.setLastname("");
         service.createDefaultDirForUser(user.getUserDir());
 
+       UserEntity createdUser= repository.save(user);
+
         FileEntity fileEntity=new FileEntity();
         fileEntity.setName(user.getUserDir());
         //hardkodovano 1,treba popraviti
         fileEntity.setRootDir(1);
         fileEntity.setIsDir((byte) 1);
+        fileEntity.setIsDeleted((byte) 0);
+        int userId=service.getUser(userRequest.getUsername()).getIdUser();
+        fileEntity.setUserIdUser(userId);
 
         filesService.addNewFile(fileEntity);
         Response createdResponse = kcAdminClient.createKeycloakUser(userRequest);
@@ -68,7 +69,7 @@ public class AdminController {
             return ResponseEntity.status(409).build();
         }
 
-        return ResponseEntity.ok(repository.save(user));
+        return ResponseEntity.ok(createdUser);
     }
 
     @GetMapping("/admin/users")

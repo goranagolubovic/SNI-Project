@@ -6,7 +6,6 @@ import com.sni.dms.entities.UserEntity;
 import com.sni.dms.repositories.UserRepository;
 import com.sni.dms.requests.LoginRequest;
 import com.sni.dms.responses.LoginResponse;
-import com.sni.dms.service.KeycloakAdminClientService;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;

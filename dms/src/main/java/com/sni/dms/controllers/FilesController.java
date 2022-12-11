@@ -1,9 +1,7 @@
 package com.sni.dms.controllers;
 
 import com.sni.dms.entities.FileEntity;
-import com.sni.dms.requests.AvailableDirsRequest;
 import com.sni.dms.requests.CreateFileRequest;
-import com.sni.dms.requests.UploadFileRequest;
 import com.sni.dms.responses.FileResponse;
 import com.sni.dms.services.FilesService;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,11 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 
-import java.io.File;
-import java.nio.file.Files;
 import java.util.List;
-
-import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @RestController
 @CrossOrigin("*")
@@ -44,6 +38,9 @@ public class FilesController {
         fileEntity.setIsDir((byte) request.getIsDir());
         fileEntity.setName(request.getRootDir()+"/"+request.getName());
         fileEntity.setRootDir(filesService.getIdForDir(request.getRootDir()));
+        fileEntity.setIsDeleted((byte)0);
+        //hardkoovano 1
+        fileEntity.setUserIdUser(1);
         return new ResponseEntity<>(filesService.addNewFile(fileEntity), HttpStatus.OK);
     }
 

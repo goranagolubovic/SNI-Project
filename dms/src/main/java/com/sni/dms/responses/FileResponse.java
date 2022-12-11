@@ -1,6 +1,5 @@
 package com.sni.dms.responses;
 
-import com.sni.dms.entities.UserEntity;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

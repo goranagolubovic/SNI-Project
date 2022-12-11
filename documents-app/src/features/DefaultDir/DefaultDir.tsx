@@ -189,7 +189,7 @@ const DefaultDir = () => {
     if (file === "" || isDirContentChanged) {
       setIsDirContentChanged(false);
       getFiles(currentDir);
-      getAvailableDirs();
+      if (user.role == "document_admin") getAvailableDirs();
     }
   }, [currentDir, file, isDirContentChanged]);
 
@@ -417,14 +417,16 @@ const DefaultDir = () => {
                 EDIT FILE
               </Button>
             </div>
-            <div className={styles.actionsContent}>
-              <Select
-                text="SEND TO"
-                values={availableDirs}
-                className={""}
-                onChange={(e: any) => sendFileTo(e.target.value)}
-              ></Select>
-            </div>
+            {user.role === "document_admin" && (
+              <div className={styles.actionsContent}>
+                <Select
+                  text="SEND TO"
+                  values={availableDirs}
+                  className={""}
+                  onChange={(e: any) => sendFileTo(e.target.value)}
+                ></Select>
+              </div>
+            )}
           </div>
         )}
         {/* <iframe src={fileContent}></iframe> */}

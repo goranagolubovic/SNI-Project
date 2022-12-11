@@ -2,13 +2,11 @@ package com.sni.dms.services;
 
 import com.google.gson.Gson;
 import com.sni.dms.entities.FileEntity;
-import com.sni.dms.entities.UserEntity;
 import com.sni.dms.repositories.FilesRepository;
 import com.sni.dms.requests.*;
 import com.sni.dms.responses.FileResponse;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
-import org.apache.http.nio.entity.NFileEntity;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,11 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -38,7 +32,7 @@ public class FilesService {
     public List<FileResponse> getAllFilesFromDefaultDir(String defaultDirJson){
         String defaultDir=new Gson().fromJson(defaultDirJson,String.class);
         File defaultFile=new File(defaultDir);
-        return filesRepository.findAll().stream().filter(elem->new File(elem.getName()).getParent().equals(defaultFile.getPath()))
+        return filesRepository.findAll().stream().filter(elem->elem.getIsDeleted()==0 && new File(elem.getName()).getParent().equals(defaultFile.getPath()))
                 .map(elem->new FileResponse(elem.getIdfile(),elem.getName().split("/")[elem.getName().split("/").length-1], elem.getIsDir(), elem.getRootDir()))
                 .collect(Collectors.toList());
     }
@@ -87,8 +81,10 @@ public class FilesService {
             }
         }
         FileEntity fileEntity=findFileEntityFor(path);
-        if(fileEntity!=null)
-        filesRepository.delete(fileEntity);
+        if(fileEntity!=null) {
+            fileEntity.setIsDeleted((byte) 1);
+            filesRepository.save(fileEntity);
+        }
         return fileEntity;
     }
 
@@ -125,9 +121,12 @@ public class FilesService {
 
         FileEntity fileEntity=new FileEntity();
         fileEntity.setIsDir((byte) 0);
+        fileEntity.setIsDeleted((byte)0);
         fileEntity.setName(folderPath+"/"+file.getOriginalFilename());
         //mozda bude bespotrebno ovo
         fileEntity.setRootDir(getIdForDir(folderPath));
+        //hardkodovano 1
+        fileEntity.setUserIdUser(1);
         filesRepository.save(fileEntity);
     }
 
@@ -156,7 +155,7 @@ public class FilesService {
         String currentDir=availableDirsRequest.getCurrentDir();
         System.out.println("Now in"+currentDir);
         String userDir = availableDirsRequest.getUserDir();
-        List<FileEntity> availableDirs = filesRepository.findAll().stream().filter(elem -> !(elem.getName().equals(currentDir)) && elem.getIsDir() == 1 && elem.getName().startsWith(userDir)).collect(Collectors.toList());
+        List<FileEntity> availableDirs = filesRepository.findAll().stream().filter(elem ->elem.getIsDeleted()==0 && !(elem.getName().equals(currentDir)) && elem.getIsDir() == 1 && elem.getName().startsWith(userDir)).collect(Collectors.toList());
         return availableDirs.stream().map(elem -> elem.getName()).collect(Collectors.toList());
     }
 

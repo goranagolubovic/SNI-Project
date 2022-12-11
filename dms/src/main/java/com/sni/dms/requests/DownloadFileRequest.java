@@ -8,4 +8,5 @@ import lombok.Setter;
 public class DownloadFileRequest {
     private String userDir;
     private String filePath;
+    private String username;
 }

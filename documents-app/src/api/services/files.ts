@@ -20,16 +20,16 @@ const createFile = async (data: string) => {
         body: data,
     };
 
-    const response = await postWithCredentials(BACKEND_URL + "files/new", requestOptions);
+    const response = await postWithCredentials(BACKEND_URL + "files/newDir", requestOptions);
     return response;
 }
 
-const deleteFile = async (pathToFile: string) => {
+const deleteFile = async (data: string) => {
     const requestOptions = {
         headers,
-        body: pathToFile,
+        body: data,
     };
-    console.log(pathToFile);
+    console.log(data);
     const response = await deleteWithCredentials(BACKEND_URL + "files/delete", requestOptions);
     return response;
 }

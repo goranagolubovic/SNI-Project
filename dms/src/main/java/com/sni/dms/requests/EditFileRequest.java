@@ -8,4 +8,5 @@ import lombok.Setter;
 public class EditFileRequest {
     private String fileContent;
     private String filePath;
+    private String username;
 }

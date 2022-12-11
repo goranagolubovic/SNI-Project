@@ -9,4 +9,5 @@ public class MoveFileRequest {
     String destinationDir;
     String filePath;
     String fileName;
+    String username;
 }

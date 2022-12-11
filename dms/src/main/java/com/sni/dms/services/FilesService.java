@@ -68,8 +68,7 @@ public class FilesService {
         return -1;
     }
 
-    public FileEntity deleteFile(String pathJson){
-        String path=new Gson().fromJson(pathJson,String.class);
+    public FileEntity deleteFile(String path){
         File file=new File(path);
         System.out.println(file.toPath());
         if(file.exists()){
@@ -100,8 +99,7 @@ public class FilesService {
     }
 
     @SneakyThrows
-    public byte[] readFile(String downloadFileRequestJson) {
-        DownloadFileRequest downloadFileRequest=new Gson().fromJson(downloadFileRequestJson,DownloadFileRequest.class);
+    public byte[] readFile(DownloadFileRequest downloadFileRequest) {
         String filePath=downloadFileRequest.getFilePath();
         String userDir=downloadFileRequest.getUserDir();
         System.out.println("File is"+filePath);
@@ -131,9 +129,7 @@ public class FilesService {
     }
 
     @SneakyThrows
-    public void editFile(String editFileRequestJson) {
-        System.out.println(editFileRequestJson);
-        EditFileRequest editFileRequest=new Gson().fromJson(editFileRequestJson, EditFileRequest.class);
+    public void editFile(EditFileRequest editFileRequest) {
         File fileOld=new File(editFileRequest.getFilePath());
         fileOld.delete();
         File fileNew=new File(editFileRequest.getFilePath());
@@ -160,8 +156,7 @@ public class FilesService {
     }
 
     @SneakyThrows
-    public void moveFile(String data) {
-        MoveFileRequest moveFileRequest=new Gson().fromJson(data,MoveFileRequest.class);
+    public void moveFile(MoveFileRequest moveFileRequest) {
         String destinationDirPath=moveFileRequest.getDestinationDir();
         String filePath = moveFileRequest.getFilePath();
         String fileName=moveFileRequest.getFileName();

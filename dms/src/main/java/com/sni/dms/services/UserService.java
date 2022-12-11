@@ -159,4 +159,9 @@ public class UserService {
                 .filter(e->e.getUsername().equals(user.getUsername())).findAny();
         return optUser.isPresent() ? optUser.get().getPassword() : "";
     }
+
+    public int getIdOfUser(String username) {
+        UserEntity user=getUser(username);
+        return user.getIdUser();
+    }
 }

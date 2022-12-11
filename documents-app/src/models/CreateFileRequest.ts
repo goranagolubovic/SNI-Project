@@ -1,5 +1,6 @@
 export interface CreateFileRequest {
-    name: string;
+    fileName: string;
     isDir: number;
     rootDir: string;
+    username: string;
 }

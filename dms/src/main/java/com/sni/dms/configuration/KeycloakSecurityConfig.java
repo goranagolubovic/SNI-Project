@@ -37,7 +37,7 @@ public class KeycloakSecurityConfig extends KeycloakWebSecurityConfigurerAdapter
                 .antMatchers("/files/upload").hasAnyRole("admin","create","document_admin")
                 .antMatchers("/files/read").hasAnyRole("admin","read","document_admin")
                 .antMatchers("/files/edit").hasAnyRole("admin","update","document_admin")
-                .antMatchers("/files/delete").hasAnyRole("admin","delete","document_admin")
+                .antMatchers("/logs").hasRole("admin")
                 .anyRequest().permitAll();
         http.csrf().disable();
     }

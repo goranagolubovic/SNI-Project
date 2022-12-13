@@ -36,51 +36,58 @@ public class AdminController {
     @PostMapping("/admin/users")
     public ResponseEntity<UserEntity> saveUser(@RequestBody UserEntity user){
         System.out.println("try");
-        user.setPassword(Hashing.sha512().hashString(user.getPassword(), StandardCharsets.UTF_8).toString());
-
-        CreateUserRequest userRequest=new CreateUserRequest();
-        userRequest.setUsername(user.getUsername());
-        userRequest.setPassword(user.getPassword());
-        userRequest.setFirstname("");
-        userRequest.setEmail("");
-        userRequest.setLastname("");
-        service.createDefaultDirForUser(user.getUserDir());
-
-       UserEntity createdUser= repository.save(user);
-
-        FileEntity fileEntity=new FileEntity();
-        fileEntity.setName(user.getUserDir());
-        //hardkodovano 1,treba popraviti
-        fileEntity.setRootDir(1);
-        fileEntity.setIsDir((byte) 1);
-        fileEntity.setIsDeleted((byte) 0);
-        int userId=service.getUser(userRequest.getUsername()).getIdUser();
-        fileEntity.setUserIdUser(userId);
-
-        filesService.addNewFile(fileEntity);
-        Response createdResponse = kcAdminClient.createKeycloakUser(userRequest);
-
-
-        service.assignRole(user);
-        service.assignCRUDPrivilegis(user);
-
-        int result=createdResponse.getStatus();
-        if(result==409){
+        if(service.checkIfUsernameIsAlreadyInUse(user.getUsername())){
             return ResponseEntity.status(409).build();
         }
+            user.setPassword(Hashing.sha512().hashString(user.getPassword(), StandardCharsets.UTF_8).toString());
 
-        return ResponseEntity.ok(createdUser);
+            CreateUserRequest userRequest = new CreateUserRequest();
+            userRequest.setUsername(user.getUsername());
+            userRequest.setPassword(user.getPassword());
+            userRequest.setFirstname("");
+            userRequest.setEmail("");
+            userRequest.setLastname("");
+            service.createDefaultDirForUser(user.getUserDir());
+            user.setIsDeleted((byte) 0);
+            UserEntity createdUser = repository.save(user);
+
+            FileEntity fileEntity = new FileEntity();
+            fileEntity.setName(user.getUserDir());
+            //hardkodovano 1,treba popraviti
+            fileEntity.setRootDir(1);
+            fileEntity.setIsDir((byte) 1);
+            fileEntity.setIsDeleted((byte) 0);
+            int userId = service.getUser(userRequest.getUsername()).getIdUser();
+            fileEntity.setUserIdUser(userId);
+
+            filesService.addNewFile(fileEntity);
+            Response createdResponse = kcAdminClient.createKeycloakUser(userRequest);
+
+
+            service.assignRole(user);
+            service.assignCRUDPrivilegis(user);
+
+            int result = createdResponse.getStatus();
+            if (result == 409) {
+                return ResponseEntity.status(409).build();
+            }
+
+            return ResponseEntity.ok(createdUser);
+
     }
 
     @GetMapping("/admin/users")
     public ResponseEntity<List<UserEntity>> getUsers(){
         System.out.println("trying to get users");
-        return ResponseEntity.ok(repository.findAll());
+        return ResponseEntity.ok(service.getAllUsers());
     }
 
     @PutMapping("/admin/users")
     public ResponseEntity<UserEntity>updateUser(@RequestBody UserEntity user){
         //ako je prazno polje sifra, ostavi staru sifru
+        if(service.checkIfUsernameIsAlreadyInUse(user.getUsername())){
+            return ResponseEntity.status(409).build();
+        }
         if("".equals(user.getPassword())){
             user.setPassword(service.getOldPassword(user));
         }
@@ -88,6 +95,7 @@ public class AdminController {
         else{
             user.setPassword(Hashing.sha512().hashString(user.getPassword(), StandardCharsets.UTF_8).toString());
         }
+        user.setIsDeleted((byte)0);
         UserEntity userResponse = service.updateUser(user);
         if(kcAdminClient.updateKeyCloakUser(user) && userResponse!=null) {
 

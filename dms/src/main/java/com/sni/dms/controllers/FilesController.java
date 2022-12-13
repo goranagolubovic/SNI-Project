@@ -78,7 +78,7 @@ public class FilesController {
 
     @PostMapping(value = "/files/upload")
     public ResponseEntity<String> uploadFile(@RequestParam MultipartFile file, @RequestParam String folderName,@RequestParam String username){
-        filesService.uploadFile(file,folderName);
+        filesService.uploadFile(file,folderName,username);
         logsService.logAction(Action.UPLOAD_FILE,folderName+"/"+file.getOriginalFilename(),username);
             return ResponseEntity.status(200).body("File is uploaded successfully!");
         }

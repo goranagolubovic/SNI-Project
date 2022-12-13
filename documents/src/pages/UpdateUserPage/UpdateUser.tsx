@@ -15,6 +15,7 @@ import {
   TOKEN_EXPIRED,
   UPDATE_FAILED,
 } from "../../validation_errors";
+import { formatUserDir } from "../../util";
 export interface UpdateUserProps {
   username: string;
 }
@@ -26,7 +27,7 @@ const UpdateUser = () => {
   const [username, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [ipAddress, setIpAddress] = useState("");
-  const [userDir, setUserDir] = useState("");
+  const [startDir, setStartDir] = useState("");
   const [role, setRole] = useState("");
   const [isCreateApproved, setCreateApproved] = useState(0);
   const [isReadApproced, setReadApproved] = useState(0);
@@ -44,7 +45,7 @@ const UpdateUser = () => {
         setPassword(data.password);
         setRole(data.role);
         setIpAddress(data.ipAddress);
-        setUserDir(data.userDir);
+        setStartDir(data.userDir + "/");
         setIsCreateAllowed(data.isCreateApproved);
         setIsReadAllowed(data.isReadApproved);
         setIsUpdateAllowed(data.isUpdateApproved);
@@ -107,9 +108,7 @@ const UpdateUser = () => {
       userData.isUpdateApproved = isUpdateAllowed ? 1 : 0;
       userData.isDeleteApproved = isDeleteAllowed ? 1 : 0;
     }
-    if (userData.userDir === "") {
-      userData.userDir = userDir;
-    }
+    userData.userDir = formatUserDir(startDir + userData.userDir);
     alert(JSON.stringify(userData));
     try {
       const response = await updateUser(JSON.stringify(userData));
@@ -175,17 +174,23 @@ const UpdateUser = () => {
           {errors.ipAddress?.type && (
             <ErrorComponent name="Ip address" type={errors.username?.type} />
           )}
-          <Input
-            icon="noicon"
-            placeholder={userDir === "" ? "Home directory" : userDir}
-            className={
-              errors.userDir ? styles.componentWithError : styles.component
-            }
-            {...register("userDir")}
-          />
-          {errors.userDir?.type && (
-            <ErrorComponent name="Home directory" type={errors.userDir?.type} />
-          )}
+          <div className={styles.home_dir}>
+            <p className={styles.dir}>{startDir}</p>
+            <Input
+              icon="noicon"
+              placeholder="Home directory"
+              className={
+                errors.userDir ? styles.componentWithError : styles.component
+              }
+              {...register("userDir")}
+            />
+            {errors.userDir?.type && (
+              <ErrorComponent
+                name="Home directory"
+                type={errors.userDir?.type}
+              />
+            )}
+          </div>
           <Select
             text={role}
             values={roles}

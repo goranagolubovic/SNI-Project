@@ -2,7 +2,9 @@ package com.sni.dms.services;
 
 import com.google.gson.Gson;
 import com.sni.dms.entities.FileEntity;
+import com.sni.dms.entities.UserEntity;
 import com.sni.dms.repositories.FilesRepository;
+import com.sni.dms.repositories.UserRepository;
 import com.sni.dms.requests.*;
 import com.sni.dms.responses.FileResponse;
 import lombok.SneakyThrows;
@@ -22,11 +24,13 @@ import java.util.stream.Collectors;
 @Service
 public class FilesService {
     private final FilesRepository filesRepository;
+    private final UserRepository userRepository;
     @Value("${regex}")
     public String MATCH_ALL_REGEX;
 
-    public FilesService(FilesRepository filesRepository){
+    public FilesService(FilesRepository filesRepository,UserRepository userRepository){
         this.filesRepository=filesRepository;
+        this.userRepository=userRepository;
     }
     //getAllFiles in default dir
     public List<FileResponse> getAllFilesFromDefaultDir(String defaultDirJson){
@@ -113,7 +117,7 @@ public class FilesService {
     }
 
     @SneakyThrows
-    public void uploadFile(MultipartFile file,String folderPath) {
+    public void uploadFile(MultipartFile file,String folderPath,String username) {
         File folder=new File(folderPath);
         FileUtils.copyInputStreamToFile(file.getInputStream(), new File(folder.getAbsolutePath()+File.separator+file.getOriginalFilename()));
 
@@ -124,8 +128,17 @@ public class FilesService {
         //mozda bude bespotrebno ovo
         fileEntity.setRootDir(getIdForDir(folderPath));
         //hardkodovano 1
-        fileEntity.setUserIdUser(1);
+        fileEntity.setUserIdUser(getIdForUser(username));
         filesRepository.save(fileEntity);
+    }
+
+    private int getIdForUser(String username) {
+        Optional<UserEntity>opt= userRepository.findAll().stream()
+                .filter(elem->elem.getUsername().equals(username)).findAny();
+        if(opt.isPresent()){
+            return opt.get().getIdUser();
+        }
+        return -1;
     }
 
     @SneakyThrows

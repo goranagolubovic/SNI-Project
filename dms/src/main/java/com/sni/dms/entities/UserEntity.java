@@ -37,7 +37,9 @@ public class UserEntity {
     @Basic
     @Column(name = "is_delete_approved")
     private Byte isDeleteApproved;
-
+    @Basic
+    @Column(name = "is_deleted")
+    private Byte isDeleted;
     public int getIdUser() {
         return idUser;
     }
@@ -116,6 +118,13 @@ public class UserEntity {
 
     public void setIsDeleteApproved(Byte isDeleteApproved) {
         this.isDeleteApproved = isDeleteApproved;
+    }
+    public Byte getIsDeleted() {
+        return isDeleted;
+    }
+
+    public void setIsDeleted(Byte isDeleted) {
+        this.isDeleted = isDeleted;
     }
 
     @Override

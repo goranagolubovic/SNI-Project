@@ -135,6 +135,7 @@ const DefaultDir = () => {
       userDir: defaultDir,
       filePath: currentDir + "/" + fileName,
       username: user.username,
+      action: "read",
     };
     try {
       console.log(JSON.stringify(data));
@@ -168,6 +169,7 @@ const DefaultDir = () => {
       userDir: defaultDir,
       filePath: currentDir,
       username: user.username,
+      action: "download",
     };
     fetch(BACKEND_URL + "files/read", {
       method: "POST",

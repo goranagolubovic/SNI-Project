@@ -66,8 +66,9 @@ public class FilesController {
 
     @PostMapping(value = "/files/read")
     public ResponseEntity<byte[]> readFile(@RequestBody DownloadFileRequest request){
-        System.out.println("Reading file");
-        logsService.logAction(Action.DOWNLOAD_FILE,request.getFilePath(),request.getUsername());
+        if("download".equals(request.getAction())) {
+            logsService.logAction(Action.DOWNLOAD_FILE, request.getFilePath(), request.getUsername());
+        }
         byte[] file=filesService.readFile(request);
         if(file!=null)
             return ResponseEntity.status(200).body(file);

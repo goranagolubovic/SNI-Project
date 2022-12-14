@@ -2,10 +2,12 @@ package com.sni.dms.services;
 
 import com.google.common.hash.Hashing;
 import com.sni.dms.configuration.KeycloakProvider;
+import com.sni.dms.configuration.TotpManager;
 import com.sni.dms.entities.FileEntity;
 import com.sni.dms.entities.UserEntity;
 import com.sni.dms.repositories.FilesRepository;
 import com.sni.dms.repositories.UserRepository;
+import com.sni.dms.requests.CodeRequest;
 import com.sni.dms.requests.LoginRequest;
 import com.sni.dms.responses.LoginResponse;
 import lombok.SneakyThrows;
@@ -37,37 +39,38 @@ public class UserService {
     private UserRepository userRepository;
     private FilesRepository filesRepository;
     private final KeycloakProvider kcProvider;
+     private TotpManager totpManager;
 
 
 
     private Path root;
 
-    public UserService(UserRepository userRepository, FilesRepository filesRepository, KeycloakProvider kcProvider, @Value("${PATH}") String path){
+    public UserService(UserRepository userRepository, FilesRepository filesRepository, KeycloakProvider kcProvider, @Value("${PATH}") String path,TotpManager totpManager){
         this.userRepository = userRepository;
         this.filesRepository=filesRepository;
         this.kcProvider=kcProvider;
         this.root = Paths.get(path);
+        this.totpManager=totpManager;
     }
-    public LoginResponse login(LoginRequest loginRequest) {
+    public LoginResponse login(CodeRequest codeRequest) {
        // getUsersFromKeyCloak().get(getKeyCloakUser(loginRequest.getUsername()).getCredentials().get(0).getValue());
-        String hashReqPassword = Hashing.sha512().hashString(loginRequest.getPassword(), StandardCharsets.UTF_8).toString();
-        System.out.println(hashReqPassword);
-        Optional<UserEntity> user = userRepository.findAll().stream()
-                .filter(elem -> elem.getUsername().equals(loginRequest.getUsername())
-                        && elem.getPassword().equals(hashReqPassword)).findFirst();
+       UserEntity user=findUser(codeRequest.getUsername());
         AccessTokenResponse accessTokenResponse = null;
         LoginResponse response = null;
         Keycloak keycloak = null;
-        if (user.isPresent() && user.get().getIsDeleted()==0) {
-            System.out.println("yes");
-            keycloak = kcProvider.newKeycloakBuilderWithPasswordCredentials(loginRequest.getUsername(), hashReqPassword).build();
+        System.out.println("CODE"+codeRequest.getCode());
+        if(totpManager.verifyCode(codeRequest.getCode(), user.getSecret())) {
+            if (user.getIsDeleted() == 0) {
+                System.out.println("yes");
+                keycloak = kcProvider.newKeycloakBuilderWithPasswordCredentials(codeRequest.getUsername(), user.getPassword()).build();
 
-            try {
-                accessTokenResponse = keycloak.tokenManager().getAccessToken();
-                System.out.println(accessTokenResponse.getToken());
-                response = new LoginResponse(user.get(), accessTokenResponse.getToken());
-            } catch (BadRequestException ex) {
-                //LOG.warn("invalid account. User probably hasn't verified email.", ex);
+                try {
+                    accessTokenResponse = keycloak.tokenManager().getAccessToken();
+                    System.out.println(accessTokenResponse.getToken());
+                    response = new LoginResponse(user, accessTokenResponse.getToken());
+                } catch (BadRequestException ex) {
+                    //LOG.warn("invalid account. User probably hasn't verified email.", ex);
+                }
             }
         }
         return response;
@@ -206,5 +209,19 @@ public class UserService {
         return
                 userRepository.findAll().stream()
                         .anyMatch(elem->elem.getUsername().equals(username) && elem.getIsDeleted()==0);
+    }
+
+    public UserEntity findUser(String username){
+        Optional<UserEntity>user= userRepository.findAll().stream().filter(elem->elem.getUsername().equals(username)).findAny();
+        return user.isPresent() ? user.get() : null;
+    }
+
+    public UserEntity checkCredentials(LoginRequest request) {
+        String hashReqPassword = Hashing.sha512().hashString(request.getPassword(), StandardCharsets.UTF_8).toString();
+        System.out.println(hashReqPassword);
+        Optional<UserEntity> user = userRepository.findAll().stream()
+                .filter(elem -> elem.getUsername().equals(request.getUsername())
+                        && elem.getPassword().equals(hashReqPassword)).findFirst();
+        return user.isPresent() ? user.get():null;
     }
 }

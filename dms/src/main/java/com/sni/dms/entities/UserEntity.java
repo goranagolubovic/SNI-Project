@@ -40,6 +40,9 @@ public class UserEntity {
     @Basic
     @Column(name = "is_deleted")
     private Byte isDeleted;
+    @Basic
+    @Column(name = "secret")
+    private String secret;
     public int getIdUser() {
         return idUser;
     }
@@ -127,6 +130,13 @@ public class UserEntity {
         this.isDeleted = isDeleted;
     }
 
+    public String getSecret() {
+        return secret;
+    }
+
+    public void setSecret(String secret) {
+        this.secret = secret;
+    }
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

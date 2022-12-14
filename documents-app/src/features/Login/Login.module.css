@@ -30,3 +30,36 @@
     font-size: 1vw;
   }
 }
+
+.codecontainer {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 0.2vw;
+  gap: 1.5vw;
+  color: white;
+  font-size: 1vw;
+  align-items: center;
+  margin-top: 5vw;
+}
+.codeform {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5vw;
+}
+@media only screen and (min-height: 900px) {
+  .codecontainer {
+    width: 22vw;
+    height: 40vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #aa7e74;
+    border-radius: 0.2vw;
+    gap: 3vw;
+    color: white;
+    font-size: 1vw;
+  }
+}

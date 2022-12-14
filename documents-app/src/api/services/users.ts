@@ -13,7 +13,15 @@ const login = async (data: string) => {
     return response;
 };
 
+const checkCode = async (data: string) => {
+    const requestOptions = {
+        headers,
+        body: data,
+    };
+
+    const response = await post(BACKEND_URL + "code", requestOptions);
+    return response;
+};
 
 
-
-export { login };
+export { login, checkCode };

@@ -1,6 +1,7 @@
 package com.sni.dms.controllers;
 
 import com.google.common.hash.Hashing;
+import com.sni.dms.configuration.TotpManager;
 import com.sni.dms.entities.FileEntity;
 import com.sni.dms.entities.UserEntity;
 import com.sni.dms.repositories.UserRepository;
@@ -25,12 +26,13 @@ public class AdminController {
     private final KeycloakAdminClientService kcAdminClient;
     private final UserService service;
     private final FilesService filesService;
+    private TotpManager totpManager;
 
-
-    public AdminController(KeycloakAdminClientService kcAdminClient,UserService service,FilesService filesService) {
+    public AdminController(KeycloakAdminClientService kcAdminClient,UserService service,FilesService filesService,TotpManager totpManager) {
         this.kcAdminClient = kcAdminClient;
         this.service=service;
         this.filesService=filesService;
+        this.totpManager=totpManager;
     }
 
     @PostMapping("/admin/users")
@@ -49,6 +51,7 @@ public class AdminController {
             userRequest.setLastname("");
             service.createDefaultDirForUser(user.getUserDir());
             user.setIsDeleted((byte) 0);
+            user.setSecret(totpManager.generateSecret());
             UserEntity createdUser = repository.save(user);
 
             FileEntity fileEntity = new FileEntity();

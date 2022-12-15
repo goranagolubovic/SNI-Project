@@ -47,5 +47,14 @@ const updateUser = async (data: string) => {
     const response = await putWithCredentials(BACKEND_URL + "admin/users", requestOptions);
     return response;
 }
+const checkCode = async (data: string) => {
+    const requestOptions = {
+        headers,
+        body: data,
+    };
 
-export { login, add, fetchUsers, deleteUser, getUser, updateUser };
+    const response = await post(BACKEND_URL + "code", requestOptions);
+    return response;
+};
+
+export { login, add, fetchUsers, deleteUser, getUser, updateUser, checkCode };

@@ -25,7 +25,7 @@ const Table = () => {
           setData(responseInfo);
         }
       } else if (res.status === 403) {
-        history.push("/login");
+        history.push("/");
       }
     } catch (err) {
       console.log(err);

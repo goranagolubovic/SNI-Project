@@ -24,6 +24,10 @@ public class UserController {
     @PostMapping("/auth")
     public ResponseEntity<String> login(@RequestBody LoginRequest request){
         UserEntity user=service.checkCredentials(request);
+        if(user.getSecret()==null){
+            user.setSecret(totpManager.generateSecret());
+            service.updateUser(user);
+        }
         if(user!=null) {
             return ResponseEntity.ok(totpManager.getUriForImage(user.getSecret()));
         }

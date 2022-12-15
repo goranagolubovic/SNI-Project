@@ -1,5 +1,5 @@
 export const getToken = () => {
-    return localStorage.getItem("TOKEN");
+    return JSON.parse(localStorage.getItem("USER") || "").token;
 };
 
 export const formatUserDir = (data: string) => {

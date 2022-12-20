@@ -5,6 +5,9 @@ import com.sni.dms.configuration.KeycloakProvider;
 import com.sni.dms.configuration.TotpManager;
 import com.sni.dms.entities.FileEntity;
 import com.sni.dms.entities.UserEntity;
+import com.sni.dms.exceptions.ConflictException;
+import com.sni.dms.exceptions.InternalServerError;
+import com.sni.dms.exceptions.NotFoundException;
 import com.sni.dms.repositories.FilesRepository;
 import com.sni.dms.repositories.UserRepository;
 import com.sni.dms.requests.CodeRequest;
@@ -22,6 +25,7 @@ import org.springframework.stereotype.Service;
 
 import javax.ws.rs.BadRequestException;
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -58,12 +62,9 @@ public class UserService {
         AccessTokenResponse accessTokenResponse = null;
         LoginResponse response = null;
         Keycloak keycloak = null;
-        System.out.println("CODE"+codeRequest.getCode());
         if(totpManager.verifyCode(codeRequest.getCode(), user.getSecret())) {
             if (user.getIsDeleted() == 0) {
-                System.out.println("yes");
                 keycloak = kcProvider.newKeycloakBuilderWithPasswordCredentials(codeRequest.getUsername(), user.getPassword()).build();
-
                 try {
                     accessTokenResponse = keycloak.tokenManager().getAccessToken();
                     System.out.println(accessTokenResponse.getToken());
@@ -95,16 +96,19 @@ public class UserService {
         return roleList;
     }
 
-    public boolean delete(String username) {
-        Optional<UserEntity> user = userRepository.findAll().stream()
-                .filter(elem -> elem.getUsername().equals(username)).findAny();
-        if(user.isPresent()){
-            Optional<FileEntity> fileEntity=filesRepository.findAll().stream().filter(elem->elem.getName().equals(user.get().getUserDir())).findAny();
+    public void delete(String username) throws NotFoundException, InternalServerError {
+       UserEntity user=getUser(username);
+//        Optional<UserEntity> user = userRepository.findAll().stream()
+//                .filter(elem -> elem.getUsername().equals(username)).findAny();
+            Optional<FileEntity> fileEntity=filesRepository.findAll().stream().filter(elem->elem.getName().equals(user.getUserDir())).findAny();
+            if(fileEntity.isEmpty()){
+                throw new NotFoundException("User dir is not found");
+            }
             fileEntity.ifPresent(f->{
                 f.setIsDeleted((byte) 1);
                 //prodji kroz sve fajlove i one koje je kreirao ovaj korisnik setuj na obrisano
                 filesRepository.findAll().stream().forEach(elem-> {
-                    if (elem.getRootDir()!=null && elem.getUserIdUser() == user.get().getIdUser()){
+                    if (elem.getRootDir()!=null && elem.getUserIdUser() == user.getIdUser()){
                         elem.setIsDeleted((byte) 1);
                         filesRepository.save(elem);
 
@@ -112,24 +116,25 @@ public class UserService {
                 });
                 filesRepository.save(f);
             });
-            user.get().setIsDeleted((byte)1);
-            userRepository.save(user.get());
+            user.setIsDeleted((byte)1);
+            userRepository.save(user);
             getUsersFromKeyCloak().get(getKeyCloakUser(username).getId()).remove();
-    removeDefaultDirFromFileSystem(Path.of(user.get().getUserDir()));
-            return  true;
+    removeDefaultDirFromFileSystem(Path.of(user.getUserDir()));
+
+    }
+
+    private void removeDefaultDirFromFileSystem(Path pathToDir) throws InternalServerError {
+        try {
+            Files.walk(pathToDir)
+                    .sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
+        } catch (IOException e) {
+            throw new InternalServerError("Erro in I/O file operation.");
         }
-        return false;
     }
 
-    @SneakyThrows
-    private void removeDefaultDirFromFileSystem(Path pathToDir) {
-        Files.walk(pathToDir)
-                .sorted(Comparator.reverseOrder())
-                .map(Path::toFile)
-                .forEach(File::delete);
-    }
-
-    public UserEntity updateUser(UserEntity user){
+    public void updateUser(UserEntity user) throws NotFoundException {
 
         UserEntity e = getUser(user.getUsername());
         if (e != null) {
@@ -142,19 +147,21 @@ public class UserService {
             e.setIsReadApproved(user.getIsReadApproved());
             e.setIsUpdateApproved(user.getIsUpdateApproved());
             e.setIsDeleteApproved(user.getIsDeleteApproved());
-            return userRepository.save(e);
+            userRepository.save(e);
         }
-        return null;
+       else{
+           throw new NotFoundException("User is not found");
+        }
 
     }
 
-    public UserEntity getUser(String username) {
+    public UserEntity getUser(String username) throws NotFoundException {
         Optional<UserEntity> user = userRepository.findAll().stream()
                 .filter(elem -> elem.getUsername().equals(username)).findAny();
-        if(user.isPresent() && user.get().getIsDeleted()==0){
-            return user.get();
+        if(user.isEmpty() && user.get().getIsDeleted()==0){
+            throw  new NotFoundException("User is not found.");
         }
-        return null;
+        return user.get();
     }
 
     public void createDefaultDirForUser(String userDir) {
@@ -196,19 +203,25 @@ public class UserService {
     }
 
     public int getIdOfUser(String username) {
-        UserEntity user=getUser(username);
-        return user.getIdUser();
+        try {
+            UserEntity user = getUser(username);
+            return user.getIdUser();
+        }
+        catch (NotFoundException exception){
+            return  -1;
+        }
     }
 
     public List<UserEntity> getAllUsers() {
         return userRepository.findAll().stream().filter(elem->elem.getIsDeleted()==0)
                 .collect(Collectors.toList());
     }
-
-    public boolean checkIfUsernameIsAlreadyInUse(String username) {
-        return
-                userRepository.findAll().stream()
+    public void checkIfUsernameIsAlreadyInUse(String username) throws ConflictException {
+                boolean used=userRepository.findAll().stream()
                         .anyMatch(elem->elem.getUsername().equals(username) && elem.getIsDeleted()==0);
+                if(used){
+                    throw  new ConflictException("Username is already in use.");
+                }
     }
 
     public UserEntity findUser(String username){
@@ -216,12 +229,15 @@ public class UserService {
         return user.isPresent() ? user.get() : null;
     }
 
-    public UserEntity checkCredentials(LoginRequest request) {
+    public UserEntity checkCredentials(LoginRequest request) throws NotFoundException {
         String hashReqPassword = Hashing.sha512().hashString(request.getPassword(), StandardCharsets.UTF_8).toString();
         System.out.println(hashReqPassword);
         Optional<UserEntity> user = userRepository.findAll().stream()
                 .filter(elem -> elem.getUsername().equals(request.getUsername())
                         && elem.getPassword().equals(hashReqPassword)).findFirst();
-        return user.isPresent() ? user.get():null;
+        if(user.isEmpty()){
+            throw  new NotFoundException("Bad credentials");
+        }
+       return user.get();
     }
 }

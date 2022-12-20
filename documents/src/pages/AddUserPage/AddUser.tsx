@@ -11,7 +11,7 @@ import ErrorComponent from "../../shared/components/ErrorComponent/ErrorComponen
 import { useHistory } from "react-router-dom";
 import { add } from "../../api/services/users";
 import { ADD_FAILED, TOKEN_EXPIRED } from "../../validation_errors";
-import { INITIAL_DIR } from "../../constants";
+import { INITIAL_DIR, NOT_AUTHORIZED, SESSION_EXPIRED } from "../../constants";
 import { formatUserDir } from "../../util";
 export interface AddUserProps {
   isActionAdding: boolean;
@@ -19,7 +19,7 @@ export interface AddUserProps {
 const AddUser = () => {
   const methods = useForm<AddUserRequest>({ mode: "onChange" });
   const [selectedRole, setSelectedRole] = useState("");
-  const [addError, setAddError] = useState(false);
+  const [addError, setAddError] = useState("");
   const [addingFailed, setAddingFailed] = useState(false);
   const [username, setUsername] = useState("");
   const {
@@ -59,6 +59,7 @@ const AddUser = () => {
     setAddingFailed(false);
   };
   const onSubmit = async (userData: AddUserRequest) => {
+    setAddError("");
     if (userData.role === "client") {
       userData.isReadApproved = isReadAllowed ? 1 : 0;
       userData.isCreateApproved = isCreateAllowed ? 1 : 0;
@@ -70,12 +71,22 @@ const AddUser = () => {
     alert(JSON.stringify(userData));
     try {
       const response = await add(JSON.stringify(userData));
-      if (response.status === 200) {
-        history.push("/system-admin");
-      } else if (response.status === 401) {
-        setAddError(true);
+      if (response.status === 401) {
+        setAddError(SESSION_EXPIRED);
+      } else if (response.status === 403) {
+        setAddError(NOT_AUTHORIZED);
       } else {
-        setAddingFailed(true);
+        const responseData = await response.json();
+        if (responseData.status === 200) {
+          history.push("/system-admin");
+        }
+        if (responseData.status === 409) {
+          setAddError(responseData.message);
+        } else if (response.status === 404) {
+          setAddError(responseData.message);
+        } else {
+          setAddingFailed(true);
+        }
       }
     } catch (error) {
       // setRegistrationFailed(true);
@@ -182,16 +193,7 @@ const AddUser = () => {
             ></PrivilegiesContainer>
           )}
 
-          {addError && (
-            <ErrorComponent
-              name="Add Error"
-              type={TOKEN_EXPIRED}
-              className={styles.error}
-            />
-          )}
-          {addingFailed && (
-            <ErrorComponent name="Add failed" type={ADD_FAILED} />
-          )}
+          <ErrorComponent name={addError} />
           <div className={styles.buttonContainer}>
             <Button
               type="submit"
@@ -213,6 +215,9 @@ const AddUser = () => {
               }
             />
           </div>
+          <Button type="link" onClick={() => history.push("/")}>
+            Sign in
+          </Button>
         </form>
       </FormProvider>
     </div>

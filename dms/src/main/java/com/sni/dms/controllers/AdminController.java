@@ -1,20 +1,25 @@
 package com.sni.dms.controllers;
 
 import com.google.common.hash.Hashing;
+import com.google.gson.Gson;
 import com.sni.dms.configuration.TotpManager;
 import com.sni.dms.entities.FileEntity;
 import com.sni.dms.entities.UserEntity;
+import com.sni.dms.exceptions.ConflictException;
+import com.sni.dms.exceptions.InternalServerError;
+import com.sni.dms.exceptions.NotFoundException;
+import com.sni.dms.records.ResponseRecord;
 import com.sni.dms.repositories.UserRepository;
 import com.sni.dms.requests.CreateUserRequest;
 import com.sni.dms.service.KeycloakAdminClientService;
 import com.sni.dms.services.FilesService;
 import com.sni.dms.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -36,11 +41,10 @@ public class AdminController {
     }
 
     @PostMapping("/admin/users")
-    public ResponseEntity<UserEntity> saveUser(@RequestBody UserEntity user){
+    public ResponseEntity<ResponseRecord> saveUser(@RequestBody UserEntity user){
         System.out.println("try");
-        if(service.checkIfUsernameIsAlreadyInUse(user.getUsername())){
-            return ResponseEntity.status(409).build();
-        }
+        try {
+            service.checkIfUsernameIsAlreadyInUse(user.getUsername());
             user.setPassword(Hashing.sha512().hashString(user.getPassword(), StandardCharsets.UTF_8).toString());
 
             CreateUserRequest userRequest = new CreateUserRequest();
@@ -70,71 +74,81 @@ public class AdminController {
             service.assignRole(user);
             service.assignCRUDPrivilegis(user);
 
-            int result = createdResponse.getStatus();
-            if (result == 409) {
-                return ResponseEntity.status(409).build();
-            }
-
-            return ResponseEntity.ok(createdUser);
+            return ResponseEntity.ok(new ResponseRecord(200, ""));
+//vjerovatno za ovim nema potrebe
+//            int result = createdResponse.getStatus();
+//            if (result == 409) {
+//                return ResponseEntity.status(409).build();
+//            }
+        }
+        catch (ConflictException ex1){
+            return ResponseEntity.ok(new ResponseRecord(409, ex1.getMessage()));
+        }
+        catch (NotFoundException ex2){
+            return ResponseEntity.ok(new ResponseRecord(404, ex2.getMessage()));
+        }
 
     }
 
     @GetMapping("/admin/users")
     public ResponseEntity<List<UserEntity>> getUsers(){
-        System.out.println("trying to get users");
         return ResponseEntity.ok(service.getAllUsers());
     }
 
     @PutMapping("/admin/users")
-    public ResponseEntity<UserEntity>updateUser(@RequestBody UserEntity user){
-        //ako je prazno polje sifra, ostavi staru sifru
-        if(service.checkIfUsernameIsAlreadyInUse(user.getUsername())){
-            return ResponseEntity.status(409).build();
+    public ResponseEntity<ResponseRecord>updateUser(@RequestBody UserEntity user){
+
+        try {
+            //service.checkIfUsernameIsAlreadyInUse(user.getUsername());
+            //ako je prazno polje sifra, ostavi staru sifru
+            if ("".equals(user.getPassword())) {
+                user.setPassword(service.getOldPassword(user));
+            }
+            //ako nije sacuvaj hash lozinke u bazu
+            else {
+                user.setPassword(Hashing.sha512().hashString(user.getPassword(), StandardCharsets.UTF_8).toString());
+            }
+            user.setIsDeleted((byte) 0);
+            service.updateUser(user);
+            kcAdminClient.updateKeyCloakUser(user);
+
+
+                service.assignRole(user);
+                service.assignCRUDPrivilegis(user);
+
+                return  ResponseEntity.ok(new ResponseRecord(200,""));
+
+
         }
-        if("".equals(user.getPassword())){
-            user.setPassword(service.getOldPassword(user));
-        }
-        //ako nije sacuvaj hash lozinke u bazu
-        else{
-            user.setPassword(Hashing.sha512().hashString(user.getPassword(), StandardCharsets.UTF_8).toString());
-        }
-        user.setIsDeleted((byte)0);
-        UserEntity userResponse = service.updateUser(user);
-        if(kcAdminClient.updateKeyCloakUser(user) && userResponse!=null) {
-
-
-        service.assignRole(user);
-        service.assignCRUDPrivilegis(user);
-
-
-            return new ResponseEntity<>(userResponse, HttpStatus.OK);
-
-        }
-        else{
-            return new ResponseEntity<>( HttpStatus.NOT_FOUND);
+        catch(NotFoundException e2){
+            return  ResponseEntity.ok(new ResponseRecord(404,e2.getMessage()));
         }
     }
     @DeleteMapping(value = "/admin/users/{username}")
-    public ResponseEntity<String> deleteUser(@PathVariable String username) {
-
-        var isRemoved = service.delete(username);
-
-        if (!isRemoved) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-
-        return new ResponseEntity<>(username, HttpStatus.OK);
+    public ResponseEntity<ResponseRecord> deleteUser(@PathVariable String username) {
+    try {
+        service.delete(username);
+        return ResponseEntity.ok(new ResponseRecord(200,""));
+    }
+    catch (NotFoundException exception){
+        return ResponseEntity.ok(new ResponseRecord(404,exception.getMessage()));
+    } catch (InternalServerError e) {
+        return ResponseEntity.ok(new ResponseRecord(500,e.getMessage()));
+    }
     }
 
     @GetMapping(value = "/admin/users/{username}")
-    public ResponseEntity<UserEntity> getUser(@PathVariable String username) {
-
-        var user = service.getUser(username);
-
-        if (user==null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    public ResponseEntity<String> getUser(@PathVariable String username) {
+        try {
+            var user = service.getUser(username);
+            String userJson=new Gson().toJson(user);
+            return ResponseEntity.ok(userJson);
+        }
+        catch (NotFoundException exception){
+            ResponseRecord responseRecord=new ResponseRecord(404,exception.getMessage());
+            String jsonRecord=new Gson().toJson(responseRecord);
+            return ResponseEntity.ok(jsonRecord);
         }
 
-        return new ResponseEntity<>(user, HttpStatus.OK);
     }
 }

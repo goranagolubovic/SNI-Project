@@ -2,13 +2,14 @@ import classNames from "classnames";
 import React from "react";
 import styles from "./Button.module.css";
 
-export type ButtonType = "submit" | "table" | "add" | "cancel";
+export type ButtonType = "submit" | "table" | "add" | "cancel" | "link";
 
 const buttonTypeClasses: Record<ButtonType, string> = {
   submit: styles.submit,
   table: styles.table,
   add: styles.add,
   cancel: styles.cancel,
+  link: styles.link,
 };
 
 export interface ButtonProps

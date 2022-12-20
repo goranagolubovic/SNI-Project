@@ -2,11 +2,12 @@ import React, { useCallback, useEffect, useState } from "react";
 import DataTable from "react-data-table-component";
 import RoutesWrapper from "../../routes/RoutesWrapper";
 import classNames from "classnames";
-import styles from "../Table.module.css";
+import styles from "./Table.module.css";
 import { Build, Backspace } from "@mui/icons-material";
 import { Button } from "../../shared/components/Button/Button";
 import { useHistory } from "react-router-dom";
 import { deleteUser, fetchUsers } from "../../api/services/users";
+import { SESSION_EXPIRED } from "../../constants";
 const Table = () => {
   const [tokenExpired, setTokenExpired] = useState(false);
   const [tableContentChanged, setTableContentChanged] = useState(false);
@@ -38,14 +39,16 @@ const Table = () => {
   const removeUser = async (username: string) => {
     try {
       let res = await deleteUser(username);
-      console.log(res.status);
-      if (res.status !== 403) {
-        if (res.status === 401) {
+      let data = await res.json();
+      if (data.status !== 403) {
+        if (data.status === 401) {
           setTokenExpired(true);
+        } else if (data.status === 404) {
+          alert(data.message);
         } else {
           setTableContentChanged(!tableContentChanged);
         }
-      } else if (res.status === 403) {
+      } else if (data.status === 403) {
         history.push("/login");
       }
     } catch (err) {
@@ -127,13 +130,25 @@ const Table = () => {
     },
   ];
   return (
-    <DataTable
-      className={classNames("rdt_TableCell", "rdt_TableCol")}
-      columns={columns}
-      data={data}
-      fixedHeader
-      highlightOnHover
-    ></DataTable>
+    <div>
+      {!tokenExpired && (
+        <DataTable
+          className={classNames("rdt_TableCell", "rdt_TableCol")}
+          columns={columns}
+          data={data}
+          fixedHeader
+          highlightOnHover
+        ></DataTable>
+      )}
+      {tokenExpired && (
+        <div className={styles.sessionExpiration}>
+          <p>{SESSION_EXPIRED}</p>
+          <Button type="link" onClick={() => history.push("/")}>
+            Sign in
+          </Button>
+        </div>
+      )}
+    </div>
   );
 };
 

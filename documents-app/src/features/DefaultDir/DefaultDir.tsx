@@ -111,12 +111,14 @@ const DefaultDir = () => {
     };
     try {
       let res = await editFile(JSON.stringify(data));
-      if (res.status === 200) {
+      let resData = await res.json();
+      if (resData.status === 200) {
         setEditFileContent(false);
-        const message = await res.text();
-        alert(message);
+        alert(resData.message);
       } else if (res.status === 403 || res.status === 401) {
         history.push("/");
+      } else if (resData.status === 404) {
+        alert(resData.message);
       }
     } catch (err) {
       console.log(err);
@@ -202,13 +204,15 @@ const DefaultDir = () => {
   const getPreviousDir = async () => {
     try {
       let res = await getParentDir(JSON.stringify(currentDir));
-      if (res.status === 200) {
-        const previousDir = await res.text();
+      let resData = await res.json();
+      if (resData.status === 200) {
+        const previousDir = resData.message;
+        console.log("Now current dir is" + previousDir);
         setCurrentDir(previousDir);
       } else if (
-        res.status === 403 ||
-        res.status === 401 ||
-        res.status === 404
+        resData.status === 403 ||
+        resData.status === 401 ||
+        resData.status === 404
       ) {
         history.push("/");
       }
@@ -228,10 +232,13 @@ const DefaultDir = () => {
 
     try {
       let res = await createFile(JSON.stringify(data));
-      if (res.status === 200) {
+      let resData = await res.json();
+      if (resData.status === 200) {
         getFiles(currentDir);
       } else if (res.status === 403 || res.status === 401) {
         history.push("/");
+      } else if (resData.status === 404 || resData.status === 409) {
+        alert(resData.message);
       }
     } catch (err) {
       console.log(err);
@@ -247,14 +254,13 @@ const DefaultDir = () => {
       console.log(currentDir);
       getPreviousDir();
       let res = await deleteFile(JSON.stringify(data));
-      if (res.status === 200) {
+      let responseData = await res.json();
+      if (responseData.status === 200) {
         setFile("");
-      } else if (
-        res.status === 403 ||
-        res.status === 401 ||
-        res.status === 404
-      ) {
+      } else if (responseData.status === 403 || responseData.status === 401) {
         history.push("/");
+      } else if (responseData.status === 404) {
+        alert(responseData.message);
       }
     } catch (err) {
       console.log(err);
@@ -286,11 +292,11 @@ const DefaultDir = () => {
           body: formData,
           mode: "cors",
         })
-          .then((response) => Promise.all([response.status, response.text()]))
+          .then((response) => Promise.all([response.status, response.json()]))
           .then(function ([status, myJson]) {
             if (status == 200) {
               console.log(myJson);
-              alert(myJson);
+              alert(myJson.message);
               setIsDirContentChanged(true);
             } else {
               history.push("/");
@@ -322,8 +328,14 @@ const DefaultDir = () => {
         username: user.username,
       };
       let res = await moveFileTo(JSON.stringify(data));
+      let resData = await res.json();
       if (res.status === 403 || res.status === 401) {
         history.push("/");
+      }
+      if (resData.status === 404 || resData.status === 500) {
+        alert(resData.message);
+      }
+      if (resData.status === 200) {
       }
     } catch (err) {
       console.log(err);

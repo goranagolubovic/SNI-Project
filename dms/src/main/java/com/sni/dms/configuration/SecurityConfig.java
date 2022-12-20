@@ -1,67 +1,23 @@
-//        package com.sni.dms.configuration;
-//        import org.keycloak.adapters.springboot.KeycloakSpringBootConfigResolver;
-//        import org.keycloak.adapters.springsecurity.KeycloakConfiguration;
-//        import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticationProvider;
-//        import org.keycloak.adapters.springsecurity.config.KeycloakWebSecurityConfigurerAdapter;
-//        import org.springframework.beans.factory.annotation.Autowired;
-//        import org.springframework.context.annotation.Bean;
-//        import org.springframework.context.annotation.Import;
-//        import org.springframework.security.authentication.AuthenticationManager;
-//        import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-//        import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
-//        import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-//        import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-//        import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper;
-//        import org.springframework.security.core.session.SessionRegistry;
-//        import org.springframework.security.core.session.SessionRegistryImpl;
-//        import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy;
-//        import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
+//package com.sni.dms.configuration;
 //
-//@KeycloakConfiguration
-//@Import(KeycloakSpringBootConfigResolver.class)
-//@EnableWebSecurity
-//@EnableGlobalMethodSecurity(jsr250Enabled = true)
-//public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter
-//{
-//    /**
-//     * Registers the KeycloakAuthenticationProvider with the authentication manager.
-//     */
-//    @Autowired
-//    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-//        KeycloakAuthenticationProvider keycloakAuthenticationProvider = keycloakAuthenticationProvider();
-//        keycloakAuthenticationProvider.setGrantedAuthoritiesMapper(new SimpleAuthorityMapper());
-//        auth.authenticationProvider(keycloakAuthenticationProvider);
-//    }
+//import lombok.SneakyThrows;
+//import org.springframework.context.annotation.Configuration;
+//import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+//import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 //
-//    /**
-//     * Defines the session authentication strategy.
-//     */
-//    @Bean
+//@Configuration
+//public class SecurityConfig extends WebSecurityConfigurerAdapter {
+//
+//    @SneakyThrows
 //    @Override
-//    protected SessionAuthenticationStrategy sessionAuthenticationStrategy() {
-//        return new RegisterSessionAuthenticationStrategy(new SessionRegistryImpl());
-//    }
-//
-//    @Bean
-//    protected SessionRegistry buildSessionRegistry() {
-//        return new SessionRegistryImpl();
-//    }
-//
-//    @Bean
-//    @Override
-//    public AuthenticationManager authenticationManagerBean() throws Exception {
-//        return super.authenticationManagerBean();
-//    }
-//
-//    @Override
-//    protected void configure(HttpSecurity http) throws Exception
-//    {
-//        super.configure(http);
+//    protected void configure(HttpSecurity http) {
 //        http
-//                .authorizeRequests()
-//                .antMatchers("/admin/*").hasRole("admin")
-////                .antMatchers("/user/*").hasRole("employee")
-//                .anyRequest().permitAll();
-//        http.csrf().disable();
-//    }
-//}
+//        .csrf().disable()
+//        .authorizeRequests().anyRequest().authenticated()
+//        .and()
+//        .oauth2ResourceServer().jwt();
+//
+//        // Send a 401 message to the browser (w/o this, you'll see a blank page)
+//       // Okta.configureResourceServer401ResponseBody(http);
+//        }
+//        }

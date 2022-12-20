@@ -18,19 +18,20 @@ const Login = () => {
   const [qrImageUrl, setQrImageUrl] = useState("");
   const [showCodeInputField, setShowCodeInputField] = useState(false);
   const [username, setUserName] = useState("");
+  const [loginError, setLoginError] = useState("");
   const onSubmit = async ({ username, password }: LoginRequest) => {
     const data = {
       username,
       password,
     };
     setUserName(username);
+    //resetuj eror pri sljedecem submitu
+    setLoginError("");
     console.log(data);
     try {
       const response = await login(JSON.stringify(data));
-
-      if (response.status === 200) {
-        const res = await response.text();
-        console.log(res);
+      let respData = await response.json();
+      if (respData.status !== 404) {
         // const token = res.token;
         // //const role = res.user.role;
         // if (token !== undefined) {
@@ -40,10 +41,10 @@ const Login = () => {
         // } else {
         //   history.push("/login");
         // }
-        if (res != "Bad credentials") {
-          setShowCodeInputField(false);
-          setQrImageUrl(res);
-        }
+        setShowCodeInputField(false);
+        setQrImageUrl(respData.message);
+      } else {
+        setLoginError(respData.message);
       }
     } catch (err) {
       console.log(err);
@@ -129,6 +130,7 @@ const Login = () => {
           </form>
         </div>
       )}
+      <p className={styles.errorMsg}>{loginError}</p>
     </div>
   );
 };

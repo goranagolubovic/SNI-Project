@@ -63,3 +63,6 @@
     font-size: 1vw;
   }
 }
+.errorMsg {
+  color: white;
+}

@@ -2,6 +2,8 @@ package com.sni.dms.controllers;
 
 import com.sni.dms.configuration.TotpManager;
 import com.sni.dms.entities.UserEntity;
+import com.sni.dms.exceptions.NotFoundException;
+import com.sni.dms.records.ResponseRecord;
 import com.sni.dms.requests.CodeRequest;
 import com.sni.dms.requests.LoginRequest;
 import com.sni.dms.responses.LoginResponse;
@@ -22,18 +24,23 @@ public class UserController {
     }
 
     @PostMapping("/auth")
-    public ResponseEntity<String> login(@RequestBody LoginRequest request){
-        UserEntity user=service.checkCredentials(request);
-        if(user.getSecret()==null){
-            user.setSecret(totpManager.generateSecret());
-            service.updateUser(user);
+    public ResponseEntity<ResponseRecord> login(@RequestBody LoginRequest request){
+        try {
+            UserEntity user = service.checkCredentials(request);
+
+                //bespotreban kod, imaju sad svi secret
+//        if(user.getSecret()==null){
+//            user.setSecret(totpManager.generateSecret());
+//            try {
+//                service.updateUser(user);
+//            }
+//            catch (NotFoundException exception){
+//                return ResponseEntity.ok(exception.getMessage());
+//            }
+                return ResponseEntity.ok(new ResponseRecord(200,totpManager.getUriForImage(user.getSecret())));
         }
-        if(user!=null) {
-            return ResponseEntity.ok(totpManager.getUriForImage(user.getSecret()));
-        }
-        else{
-            //hardkodovana poruka
-            return ResponseEntity.ok("Bad credentials");
+        catch (NotFoundException exception){
+            return ResponseEntity.ok(new ResponseRecord(404, exception.getMessage()));
         }
     }
     @PostMapping("/code")
@@ -41,6 +48,7 @@ public class UserController {
         System.out.println("Code is ");
         System.out.println(request.getCode());
         LoginResponse loginResponse = service.login(request);
+        loginResponse.getUser().setPassword(null);
         return ResponseEntity.ok(loginResponse);
     }
 }

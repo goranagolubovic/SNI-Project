@@ -19,7 +19,7 @@ const checkType = (name: string, type?: string) => {
   ) {
     return name + INVALID_FORM;
   } else {
-    return type;
+    return name;
   }
 };
 

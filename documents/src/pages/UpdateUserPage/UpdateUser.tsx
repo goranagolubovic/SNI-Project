@@ -16,13 +16,14 @@ import {
   UPDATE_FAILED,
 } from "../../validation_errors";
 import { formatUserDir } from "../../util";
+import { NOT_AUTHORIZED, SESSION_EXPIRED } from "../../constants";
 export interface UpdateUserProps {
   username: string;
 }
 const UpdateUser = () => {
   const methods = useForm<AddUserRequest>({ mode: "onChange" });
   const [selectedRole, setSelectedRole] = useState("");
-  const [updateError, setUpdateError] = useState(false);
+  const [updateError, setUpdateError] = useState("");
   const [updatingFailed, setUpdatingFailed] = useState(false);
   const [username, setUserName] = useState("");
   const [password, setPassword] = useState("");
@@ -39,8 +40,8 @@ const UpdateUser = () => {
   const fetchUser = async (username: string) => {
     try {
       const response = await getUser(username);
-      if (response.status === 200) {
-        const data = await response.json();
+      const data = await response.json();
+      if (data.status === undefined) {
         setUserName(data.username);
         setPassword(data.password);
         setRole(data.role);
@@ -50,8 +51,8 @@ const UpdateUser = () => {
         setIsReadAllowed(data.isReadApproved);
         setIsUpdateAllowed(data.isUpdateApproved);
         setIsDeleteAllowed(data.isDeleteApproved);
-      } else if (response.status === 401) {
-        setUpdateError(true);
+      } else if (data.status === 404 || data.status === 409) {
+        setUpdateError(data.message);
       } else {
         setUpdatingFailed(true);
       }
@@ -112,12 +113,23 @@ const UpdateUser = () => {
     alert(JSON.stringify(userData));
     try {
       const response = await updateUser(JSON.stringify(userData));
-      if (response.status === 200) {
-        history.push("/system-admin");
-      } else if (response.status === 401) {
-        setUpdateError(true);
+      const data = await response.json();
+      if (response.status === 401) {
+        setUpdateError(SESSION_EXPIRED);
+      } else if (response.status === 403) {
+        setUpdateError(NOT_AUTHORIZED);
       } else {
-        setUpdatingFailed(true);
+        const responseData = await response.json();
+        if (responseData.status === 200) {
+          history.push("/system-admin");
+        }
+        if (responseData.status === 409) {
+          setUpdateError(responseData.message);
+        } else if (response.status === 404) {
+          setUpdateError(responseData.message);
+        } else {
+          setUpdatingFailed(true);
+        }
       }
     } catch (error) {
       // setRegistrationFailed(true);
@@ -221,10 +233,10 @@ const UpdateUser = () => {
             ></PrivilegiesContainer>
           )}
 
-          {updateError && (
+          {updateError !== "" && (
             <ErrorComponent
-              name="Add Error"
-              type={TOKEN_EXPIRED}
+              // type={TOKEN_EXPIRED}
+              name={updateError}
               className={styles.error}
             />
           )}
@@ -252,6 +264,9 @@ const UpdateUser = () => {
               }
             />
           </div>
+          <Button type="link" onClick={() => history.push("/")}>
+            Sign in
+          </Button>
         </form>
       </FormProvider>
     </div>

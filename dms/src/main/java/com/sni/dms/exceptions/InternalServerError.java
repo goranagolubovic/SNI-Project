@@ -7,7 +7,7 @@ public class InternalServerError extends HttpException
 {
     public InternalServerError()
     {
-        super(String.valueOf(HttpStatus.CONFLICT));
+        super(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR));
     }
 
 

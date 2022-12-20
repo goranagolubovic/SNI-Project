@@ -55,6 +55,7 @@ public class AdminController {
             userRequest.setLastname("");
             service.createDefaultDirForUser(user.getUserDir());
             user.setIsDeleted((byte) 0);
+            user.setIsFirstSignIn((byte)1);
             user.setSecret(totpManager.generateSecret());
             UserEntity createdUser = repository.save(user);
 

@@ -8,6 +8,7 @@ import com.sni.dms.entities.UserEntity;
 import com.sni.dms.exceptions.ConflictException;
 import com.sni.dms.exceptions.InternalServerError;
 import com.sni.dms.exceptions.NotFoundException;
+import com.sni.dms.exceptions.WrongAuthCodeException;
 import com.sni.dms.repositories.FilesRepository;
 import com.sni.dms.repositories.UserRepository;
 import com.sni.dms.requests.CodeRequest;
@@ -56,7 +57,7 @@ public class UserService {
         this.root = Paths.get(path);
         this.totpManager=totpManager;
     }
-    public LoginResponse login(CodeRequest codeRequest) {
+    public LoginResponse login(CodeRequest codeRequest) throws WrongAuthCodeException {
        // getUsersFromKeyCloak().get(getKeyCloakUser(loginRequest.getUsername()).getCredentials().get(0).getValue());
        UserEntity user=findUser(codeRequest.getUsername());
         AccessTokenResponse accessTokenResponse = null;
@@ -64,15 +65,24 @@ public class UserService {
         Keycloak keycloak = null;
         if(totpManager.verifyCode(codeRequest.getCode(), user.getSecret())) {
             if (user.getIsDeleted() == 0) {
-                keycloak = kcProvider.newKeycloakBuilderWithPasswordCredentials(codeRequest.getUsername(), user.getPassword()).build();
-                try {
-                    accessTokenResponse = keycloak.tokenManager().getAccessToken();
-                    System.out.println(accessTokenResponse.getToken());
-                    response = new LoginResponse(user, accessTokenResponse.getToken());
-                } catch (BadRequestException ex) {
-                    //LOG.warn("invalid account. User probably hasn't verified email.", ex);
+                if(user.getIsFirstSignIn()==1){
+                    user.setIsFirstSignIn((byte)0);
+                    userRepository.save(user);
                 }
+                    keycloak = kcProvider.newKeycloakBuilderWithPasswordCredentials(codeRequest.getUsername(), user.getPassword()).build();
+                    try {
+                        accessTokenResponse = keycloak.tokenManager().getAccessToken();
+                        System.out.println("Tokenn"+accessTokenResponse.getToken());
+                        response = new LoginResponse(user, accessTokenResponse.getToken(),null);
+                    } catch (BadRequestException ex) {
+                        System.out.println(ex.getMessage());
+                        //LOG.warn("invalid account. User probably hasn't verified email.", ex);
+                    }
+
             }
+        }
+        else{
+            throw new WrongAuthCodeException("The auth code is incorrect.");
         }
         return response;
     }

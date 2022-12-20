@@ -19,7 +19,8 @@ const Login = () => {
   const [qrImageUrl, setQrImageUrl] = useState("");
   const [showCodeInputField, setShowCodeInputField] = useState(false);
   const [username, setUserName] = useState("");
-  const [loginError, setLoginError] = useState("");
+  const [credentialsError, setCredentialsError] = useState("");
+  const [codeError, setCodeError] = useState("");
   const onSubmit = async ({ username, password }: LoginRequest) => {
     const data = {
       username,
@@ -27,7 +28,7 @@ const Login = () => {
     };
     setUserName(username);
     //resetuj eror pri sljedecem submitu
-    setLoginError("");
+    setCredentialsError("");
     console.log(data);
     try {
       const response = await login(JSON.stringify(data));
@@ -42,10 +43,10 @@ const Login = () => {
         // } else {
         //   history.push("/login");
         // }
-        setShowCodeInputField(false);
         setQrImageUrl(respData.message);
+        setShowCodeInputField(qrImageUrl == "");
       } else {
-        setLoginError(respData.message);
+        setCredentialsError(respData.message);
       }
     } catch (err) {
       console.log(err);
@@ -53,6 +54,7 @@ const Login = () => {
     }
   };
   const onCodeEnter = async ({ code }: any) => {
+    setCodeError("");
     const data = {
       code,
       username,
@@ -67,12 +69,13 @@ const Login = () => {
         console.log(res);
         const token = res.token;
         //const role = res.user.role;
-        if (token !== undefined) {
+        if (token !== null) {
           localStorage.setItem("USER", JSON.stringify(res));
           history.push("/documents");
           // const { token, ...user } = res;
         } else {
-          history.push("/login");
+          setCodeError(res.loginMessage);
+          history.push("/");
         }
       }
     } catch (err) {
@@ -131,7 +134,8 @@ const Login = () => {
           </form>
         </div>
       )}
-      <p className={styles.errorMsg}>{loginError}</p>
+      <p className={styles.credentialsError}>{credentialsError}</p>
+      <p className={styles.codeError}>{codeError}</p>
     </div>
   );
 };

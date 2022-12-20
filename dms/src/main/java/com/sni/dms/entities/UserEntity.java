@@ -46,6 +46,9 @@ public class UserEntity {
     @Basic
     @Column(name = "secret")
     private String secret;
+    @Basic
+    @Column(name = "is_first_sign_in")
+    private Byte isFirstSignIn;
     public int getIdUser() {
         return idUser;
     }
@@ -139,6 +142,14 @@ public class UserEntity {
 
     public void setSecret(String secret) {
         this.secret = secret;
+    }
+
+    public Byte getIsFirstSignIn() {
+        return isFirstSignIn;
+    }
+
+    public void setIsFirstSignIn(Byte isFirstSignIn) {
+        this.isFirstSignIn = isFirstSignIn;
     }
     @Override
     public boolean equals(Object o) {

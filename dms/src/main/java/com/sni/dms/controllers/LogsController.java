@@ -1,11 +1,7 @@
 package com.sni.dms.controllers;
 
-import com.sni.dms.entities.LogsEntity;
-import com.sni.dms.requests.LoginRequest;
-import com.sni.dms.responses.LoginResponse;
 import com.sni.dms.responses.LogsResponse;
 import com.sni.dms.services.LogsService;
-import com.sni.dms.services.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Redirect, useHistory } from "react-router-dom";
 import { LoginRequest } from "../../models/LoginRequest";
+import { Button } from "../../shared/components/Button/Button";
+import Input from "../../shared/components/Input/Input";
 import styles from "../Login/Login.module.css";
 import { checkCode, login } from "../../api/services/users";
 import QrCode from "../QrCode/QrCode";
-import { Button } from "../../shared/components/Button/Button";
-import Input from "../../shared/components/Input/Input";
+import ErrorComponent from "../../shared/components/ErrorComponent/ErrorComponent";
+import { getUsername } from "../../util";
 const Login = () => {
   const {
     register,
@@ -18,42 +20,61 @@ const Login = () => {
   const [qrImageUrl, setQrImageUrl] = useState("");
   const [showCodeInputField, setShowCodeInputField] = useState(false);
   const [username, setUserName] = useState("");
-  const [credentialsError, setLoginError] = useState("");
+  const [credentialsError, setCredentialsError] = useState("");
   const [codeError, setCodeError] = useState("");
-  const onSubmit = async ({ username, password }: LoginRequest) => {
-    const data = {
-      username,
-      password,
-    };
-    setUserName(username);
-    //resetuj eror pri sljedecem submitu
-    setLoginError("");
-    console.log(data);
+
+  useEffect(() => {
+    setUserName(getUsername());
+    getUserInfo(getUsername());
+  }, []);
+  const getUserInfo = async (username: string) => {
+    console.log("happened");
     try {
-      const response = await login(JSON.stringify(data));
+      const response = await login(username);
       let respData = await response.json();
       if (respData.status !== 404) {
-        // const token = res.token;
-        // //const role = res.user.role;
-        // if (token !== undefined) {
-        //   localStorage.setItem("USER", JSON.stringify(res));
-        //   history.push("/documents");
-        //   // const { token, ...user } = res;
-        // } else {
-        //   history.push("/login");
-        // }
         setQrImageUrl(respData.message);
-        console.log(respData.message);
-        console.log(qrImageUrl.trim() === "");
-        setShowCodeInputField(respData.message === "");
+        setShowCodeInputField(respData.message == "");
       } else {
-        setLoginError(respData.message);
+        setCredentialsError(respData.message);
       }
     } catch (err) {
       console.log(err);
       reset();
     }
   };
+  // const onSubmit = async ({ username, password }: LoginRequest) => {
+  //   const data = {
+  //     username,
+  //     password,
+  //   };
+  //   setUserName(username);
+  //   //resetuj eror pri sljedecem submitu
+  //   setCredentialsError("");
+  //   console.log(data);
+  //   try {
+  //     const response = await login(JSON.stringify(data));
+  //     let respData = await response.json();
+  //     if (respData.status !== 404) {
+  //       // const token = res.token;
+  //       // //const role = res.user.role;
+  //       // if (token !== undefined) {
+  //       //   localStorage.setItem("USER", JSON.stringify(res));
+  //       //   history.push("/documents");
+  //       //   // const { token, ...user } = res;
+  //       // } else {
+  //       //   history.push("/login");
+  //       // }
+  //       setQrImageUrl(respData.message);
+  //       setShowCodeInputField(qrImageUrl == "");
+  //     } else {
+  //       setCredentialsError(respData.message);
+  //     }
+  //   } catch (err) {
+  //     console.log(err);
+  //     reset();
+  //   }
+  // };
   const onCodeEnter = async ({ code }: any) => {
     setCodeError("");
     const data = {
@@ -85,8 +106,8 @@ const Login = () => {
     }
   };
   return (
-    <div className={styles.container}>
-      <h1>Sign in</h1>
+    <div>
+      {/* <h1>Sign in</h1>
       <form
         className={styles.form}
         onSubmit={handleSubmit((data) => onSubmit(data))}
@@ -108,7 +129,7 @@ const Login = () => {
           })}
         />
         <Button children="LOGIN" type="submit" />
-      </form>
+      </form> */}
       {qrImageUrl !== "" && (
         <QrCode
           image={qrImageUrl}

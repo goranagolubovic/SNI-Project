@@ -8,20 +8,20 @@ const login = async (data: string) => {
         headers,
         body: data,
     };
-
+    console.log(data)
     const response = await post(BACKEND_URL + "auth", requestOptions);
     return response;
 };
 
-const checkCode = async (data: string) => {
+const fetchUserInfo = async (username: string) => {
     const requestOptions = {
         headers,
-        body: data,
+        body: username,
     };
 
-    const response = await post(BACKEND_URL + "code", requestOptions);
+    const response = await post(BACKEND_URL + "info", requestOptions);
     return response;
 };
 
 
-export { login, checkCode };
+export { login, fetchUserInfo };

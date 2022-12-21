@@ -7,9 +7,10 @@ import { Build, Backspace } from "@mui/icons-material";
 import { Button } from "../../shared/components/Button/Button";
 import { useHistory } from "react-router-dom";
 import { deleteUser, fetchUsers } from "../../api/services/users";
-import { SESSION_EXPIRED } from "../../constants";
+import { FORBIDDEN, SESSION_EXPIRED } from "../../constants";
 const Table = () => {
   const [tokenExpired, setTokenExpired] = useState(false);
+  const [forbidden, setForbidden] = useState(false);
   const [tableContentChanged, setTableContentChanged] = useState(false);
   const [data, setData] = useState([]);
   const history = useHistory();
@@ -26,7 +27,7 @@ const Table = () => {
           setData(responseInfo);
         }
       } else if (res.status === 403) {
-        history.push("/");
+        setForbidden(true);
       }
     } catch (err) {
       console.log(err);
@@ -49,7 +50,7 @@ const Table = () => {
           setTableContentChanged(!tableContentChanged);
         }
       } else if (data.status === 403) {
-        history.push("/login");
+        setForbidden(true);
       }
     } catch (err) {
       console.log(err);
@@ -131,7 +132,7 @@ const Table = () => {
   ];
   return (
     <div>
-      {!tokenExpired && (
+      {!tokenExpired && !forbidden && (
         <DataTable
           className={classNames("rdt_TableCell", "rdt_TableCol")}
           columns={columns}
@@ -141,8 +142,16 @@ const Table = () => {
         ></DataTable>
       )}
       {tokenExpired && (
-        <div className={styles.sessionExpiration}>
+        <div className={styles.statusError}>
           <p>{SESSION_EXPIRED}</p>
+          <Button type="link" onClick={() => history.push("/")}>
+            Sign in
+          </Button>
+        </div>
+      )}
+      {forbidden && (
+        <div className={styles.statusError}>
+          <p>{FORBIDDEN}</p>
           <Button type="link" onClick={() => history.push("/")}>
             Sign in
           </Button>

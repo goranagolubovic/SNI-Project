@@ -1,6 +1,5 @@
 package com.sni.dms.services;
 
-import com.google.common.hash.Hashing;
 import com.sni.dms.configuration.KeycloakProvider;
 import com.sni.dms.configuration.TotpManager;
 import com.sni.dms.entities.FileEntity;
@@ -12,9 +11,7 @@ import com.sni.dms.exceptions.WrongAuthCodeException;
 import com.sni.dms.repositories.FilesRepository;
 import com.sni.dms.repositories.UserRepository;
 import com.sni.dms.requests.CodeRequest;
-import com.sni.dms.requests.LoginRequest;
-import com.sni.dms.responses.LoginResponse;
-import lombok.SneakyThrows;
+import com.sni.dms.responses.UserInfoResponse;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
@@ -27,7 +24,6 @@ import org.springframework.stereotype.Service;
 import javax.ws.rs.BadRequestException;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -57,35 +53,35 @@ public class UserService {
         this.root = Paths.get(path);
         this.totpManager=totpManager;
     }
-    public LoginResponse login(CodeRequest codeRequest) throws WrongAuthCodeException {
-       // getUsersFromKeyCloak().get(getKeyCloakUser(loginRequest.getUsername()).getCredentials().get(0).getValue());
-       UserEntity user=findUser(codeRequest.getUsername());
-        AccessTokenResponse accessTokenResponse = null;
-        LoginResponse response = null;
-        Keycloak keycloak = null;
-        if(totpManager.verifyCode(codeRequest.getCode(), user.getSecret())) {
-            if (user.getIsDeleted() == 0) {
-                if(user.getIsFirstSignIn()==1){
-                    user.setIsFirstSignIn((byte)0);
-                    userRepository.save(user);
-                }
-                    keycloak = kcProvider.newKeycloakBuilderWithPasswordCredentials(codeRequest.getUsername(), user.getPassword()).build();
-                    try {
-                        accessTokenResponse = keycloak.tokenManager().getAccessToken();
-                        System.out.println("Tokenn"+accessTokenResponse.getToken());
-                        response = new LoginResponse(user, accessTokenResponse.getToken(),null);
-                    } catch (BadRequestException ex) {
-                        System.out.println(ex.getMessage());
-                        //LOG.warn("invalid account. User probably hasn't verified email.", ex);
-                    }
-
-            }
-        }
-        else{
-            throw new WrongAuthCodeException("The auth code is incorrect.");
-        }
-        return response;
-    }
+//    public UserInfoResponse login(CodeRequest codeRequest) throws WrongAuthCodeException,NotFoundException {
+//       // getUsersFromKeyCloak().get(getKeyCloakUser(loginRequest.getUsername()).getCredentials().get(0).getValue());
+//       UserEntity user=findUser(codeRequest.getUsername());
+//        AccessTokenResponse accessTokenResponse = null;
+//        UserInfoResponse response = null;
+//        Keycloak keycloak = null;
+//        if(totpManager.verifyCode(codeRequest.getCode(), user.getSecret())) {
+//            if (user.getIsDeleted() == 0) {
+//                if(user.getIsFirstSignIn()==1){
+//                    user.setIsFirstSignIn((byte)0);
+//                    userRepository.save(user);
+//                }
+//                    keycloak = kcProvider.newKeycloakBuilderWithPasswordCredentials(codeRequest.getUsername(), user.getPassword()).build();
+//                    try {
+//                        accessTokenResponse = keycloak.tokenManager().getAccessToken();
+//                        System.out.println("Tokenn"+accessTokenResponse.getToken());
+//                        response = new UserInfoResponse(user, accessTokenResponse.getToken(),null);
+//                    } catch (BadRequestException ex) {
+//                        System.out.println(ex.getMessage());
+//                        //LOG.warn("invalid account. User probably hasn't verified email.", ex);
+//                    }
+//
+//            }
+//        }
+//        else{
+//            throw new WrongAuthCodeException("The auth code is incorrect.");
+//        }
+//        return response;
+//    }
     public static UsersResource getUsersFromKeyCloak(){
         Keycloak keycloak=KeycloakProvider.getInstance();
         return keycloak.realm("SNI").users();
@@ -168,6 +164,7 @@ public class UserService {
     public UserEntity getUser(String username) throws NotFoundException {
         Optional<UserEntity> user = userRepository.findAll().stream()
                 .filter(elem -> elem.getUsername().equals(username)).findAny();
+        System.out.println("Ussername"+username);
         if(user.isEmpty() && user.get().getIsDeleted()==0){
             throw  new NotFoundException("User is not found.");
         }
@@ -234,20 +231,23 @@ public class UserService {
                 }
     }
 
-    public UserEntity findUser(String username){
+    public UserEntity findUser(String username) throws NotFoundException {
         Optional<UserEntity>user= userRepository.findAll().stream().filter(elem->elem.getUsername().equals(username)).findAny();
-        return user.isPresent() ? user.get() : null;
+        if(user.isEmpty()){
+            throw new NotFoundException("User is not found.");
+        }
+        return  user.get();
     }
 
-    public UserEntity checkCredentials(LoginRequest request) throws NotFoundException {
-        String hashReqPassword = Hashing.sha512().hashString(request.getPassword(), StandardCharsets.UTF_8).toString();
-        System.out.println(hashReqPassword);
-        Optional<UserEntity> user = userRepository.findAll().stream()
-                .filter(elem -> elem.getUsername().equals(request.getUsername())
-                        && elem.getPassword().equals(hashReqPassword)).findFirst();
-        if(user.isEmpty()){
-            throw  new NotFoundException("Bad credentials");
-        }
-       return user.get();
-    }
+//    public UserEntity checkCredentials(LoginRequest request) throws NotFoundException {
+//        String hashReqPassword = Hashing.sha512().hashString(request.getPassword(), StandardCharsets.UTF_8).toString();
+//        System.out.println(hashReqPassword);
+//        Optional<UserEntity> user = userRepository.findAll().stream()
+//                .filter(elem -> elem.getUsername().equals(request.getUsername())
+//                        && elem.getPassword().equals(hashReqPassword)).findFirst();
+//        if(user.isEmpty()){
+//            throw  new NotFoundException("Bad credentials");
+//        }
+//       return user.get();
+//    }
 }

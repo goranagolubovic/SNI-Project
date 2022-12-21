@@ -1,11 +1,41 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import "./index.css";
+import App from "./App";
+import reportWebVitals from "./reportWebVitals";
+import Keycloak from "keycloak-js";
 
+let initOptions = {
+  url: "http://localhost:8080/auth/",
+  realm: "SNI",
+  clientId: "dms1-react",
+  onLoad: "login-required",
+};
+
+let keycloak = Keycloak(initOptions);
+
+keycloak
+  .init({ onLoad: "login-required" })
+  .success((auth) => {
+    if (!auth) {
+      window.location.reload();
+    } else {
+      console.log();
+      console.info("Authenticated");
+      localStorage.setItem("TOKEN", JSON.stringify(keycloak.token));
+    }
+    keycloak.loadUserInfo().then((userInfo: any) => {
+      localStorage.setItem(
+        "USERNAME",
+        JSON.stringify(userInfo.preferred_username)
+      );
+    });
+  })
+  .error(() => {
+    console.error("Authenticated Failed");
+  });
 const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
+  document.getElementById("root") as HTMLElement
 );
 root.render(
   <React.StrictMode>

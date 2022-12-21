@@ -10,8 +10,8 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginResponse {
+public class UserInfoResponse {
     private UserEntity user;
-    private String token;
     private String loginMessage;
+    private int status;
 }

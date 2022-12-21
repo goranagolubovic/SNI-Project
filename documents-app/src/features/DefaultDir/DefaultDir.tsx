@@ -14,6 +14,7 @@ import {
   readFileContent,
 } from "../../api/services/files";
 import { fetchFiles } from "../../api/services/files";
+import { fetchUserInfo } from "../../api/services/users";
 import { Button } from "../../components/Button/Button";
 import ErrorComponent from "../../components/ErrorComponent/ErrorComponent";
 import File from "../../components/FileComponent/FileComponent";
@@ -22,6 +23,7 @@ import Select from "../../components/Select/Select";
 import { BACKEND_URL, DELETE_FOLDER_MESSAGE } from "../../constants";
 import { AvailableDirsRequest } from "../../models/AvailableDirsRequest";
 import { CreateFileRequest } from "../../models/CreateFileRequest";
+import { getToken, getUsername } from "../../util";
 import styles from "./DefaultDir.module.css";
 const DefaultDir = () => {
   const history = useHistory();
@@ -31,13 +33,15 @@ const DefaultDir = () => {
   const [previousFileContent, setPreviousFileContent] = useState<any>("");
   const [editFileContent, setEditFileContent] = useState(false);
   const [isDirContentChanged, setIsDirContentChanged] = useState(false);
-  const user = JSON.parse(localStorage.getItem("USER") || "").user;
-  const token = JSON.parse(localStorage.getItem("USER") || "").token;
-  const defaultDir = user.userDir;
+  const [defaultDir, setDefaultDir] = useState("");
   const [currentDir, setCurrentDir] = useState(defaultDir);
+  const [role, setRole] = useState("");
+  const [username, setUsername] = useState("");
   const [file, setFile] = useState("");
   const [isAddFileActive, setIsFileActive] = useState(false);
   const [isAddFOlderActive, setIsFolderActive] = useState(false);
+  const [isUserInfoFetchingCompleted, setIsUserInfoFetchingCompleted] =
+    useState(false);
   const {
     register,
     handleSubmit,
@@ -107,7 +111,7 @@ const DefaultDir = () => {
     var data = {
       filePath: currentDir,
       fileContent: fileContent,
-      username: user.username,
+      username: username,
     };
     try {
       let res = await editFile(JSON.stringify(data));
@@ -136,7 +140,7 @@ const DefaultDir = () => {
     var data = {
       userDir: defaultDir,
       filePath: currentDir + "/" + fileName,
-      username: user.username,
+      username: username,
       action: "read",
     };
     try {
@@ -166,17 +170,16 @@ const DefaultDir = () => {
     }
   };
   const saveFile = () => {
-    console.log(token);
     var data = {
       userDir: defaultDir,
       filePath: currentDir,
-      username: user.username,
+      username: username,
       action: "download",
     };
     fetch(BACKEND_URL + "files/read", {
       method: "POST",
       headers: new Headers({
-        authorization: "Bearer " + token,
+        authorization: "Bearer " + getToken(),
         "Content-Type": "application/json;charset=UTF-8",
       }),
       body: JSON.stringify(data),
@@ -194,13 +197,35 @@ const DefaultDir = () => {
       });
   };
   useEffect(() => {
-    if (file === "" || isDirContentChanged) {
+    getUserInfo(getUsername());
+    setIsUserInfoFetchingCompleted(true);
+  }, [getUsername()]);
+  useEffect(() => {
+    if ((isUserInfoFetchingCompleted && file === "") || isDirContentChanged) {
       setIsDirContentChanged(false);
       getFiles(currentDir);
-      if (user.role == "document_admin") getAvailableDirs();
+      if (role == "document_admin") getAvailableDirs();
     }
   }, [currentDir, file, isDirContentChanged]);
+  const getUserInfo = async (username: string) => {
+    console.log(username);
+    try {
+      const response = await fetchUserInfo(username);
+      const respData = await response.json();
 
+      if (respData.status == 200) {
+        setDefaultDir(respData.user.userDir);
+        setCurrentDir(respData.user.userDir);
+        setRole(respData.user.role);
+        setUsername(respData.user.username);
+      } else {
+        //alert(respData.message);
+      }
+    } catch (err) {
+      console.log(err);
+      reset();
+    }
+  };
   const getPreviousDir = async () => {
     try {
       let res = await getParentDir(JSON.stringify(currentDir));
@@ -225,7 +250,7 @@ const DefaultDir = () => {
   const onSubmit = async (data: CreateFileRequest) => {
     data.rootDir = currentDir;
     data.isDir = isAddFOlderActive ? 1 : 0;
-    data.username = user.username;
+    data.username = username;
 
     setIsFolderActive(false);
     setIsFileActive(false);
@@ -248,7 +273,7 @@ const DefaultDir = () => {
   const removeFile = async () => {
     const data = {
       path: currentDir,
-      username: user.username,
+      username: username,
     };
     try {
       console.log(currentDir);
@@ -279,7 +304,7 @@ const DefaultDir = () => {
       let formData = new FormData();
       formData.append("folderName", currentDir);
       formData.append("file", fileChoosed);
-      formData.append("username", user.username);
+      formData.append("username", username);
 
       reader.onloadend = async () => {
         const result = reader.result;
@@ -287,7 +312,7 @@ const DefaultDir = () => {
         fetch(BACKEND_URL + "files/upload", {
           method: "POST",
           headers: new Headers({
-            authorization: "Bearer " + token,
+            authorization: "Bearer " + getToken(),
           }),
           body: formData,
           mode: "cors",
@@ -325,7 +350,7 @@ const DefaultDir = () => {
         destinationDir: value,
         filePath: pathToFileToMove,
         fileName: file,
-        username: user.username,
+        username: username,
       };
       let res = await moveFileTo(JSON.stringify(data));
       let resData = await res.json();
@@ -356,7 +381,7 @@ const DefaultDir = () => {
               )}
             </div>
             <div className={styles.actionsContent}>
-              {user.role !== "client" && user.role !== "admin" && (
+              {role !== "client" && role !== "admin" && (
                 <Button type="add" onClick={() => setIsFolderActive(true)}>
                   CREATE A NEW FOLDER
                 </Button>
@@ -383,14 +408,14 @@ const DefaultDir = () => {
               )}
             </div>
             <div className={styles.actionsContent}>
-              {user.role !== "client" && user.role !== "admin" && (
+              {role !== "client" && role !== "admin" && (
                 <Button type="add" onClick={() => handleFolderDelete()}>
                   DELETE FOLDER
                 </Button>
               )}
             </div>
             <div className={styles.actionsContent}>
-              {user.role !== "admin" && (
+              {role !== "admin" && (
                 <div>
                   <Button type="add" onClick={() => findFileChooser()}>
                     FILE UPLOAD
@@ -435,20 +460,20 @@ const DefaultDir = () => {
               </Button>
             </div>
             <div className={styles.actionsContent}>
-              {user.role !== "admin" && (
+              {role !== "admin" && (
                 <Button type="add" onClick={() => removeFile()}>
                   DELETE FILE
                 </Button>
               )}
             </div>
             <div className={styles.actionsContent}>
-              {user.role !== "admin" && (
+              {role !== "admin" && (
                 <Button type="add" onClick={() => unableEditing()}>
                   EDIT FILE
                 </Button>
               )}
             </div>
-            {user.role === "document_admin" && user.role !== "admin" && (
+            {role === "document_admin" && (
               <div className={styles.actionsContent}>
                 <Select
                   text="SEND TO"

@@ -10,7 +10,7 @@ const Routes = () => {
   return (
     <Router>
       <Switch>
-        <RoutesWrapper exact path="/" component={LoginPage} />
+        <RoutesWrapper exact path="/" component={SystemAdmin} />
         <RoutesWrapper exact path="/system-admin" component={SystemAdmin} />
         <RoutesWrapper
           exact

@@ -3,6 +3,7 @@ package com.sni.dms.service;
 import com.sni.dms.configuration.KeycloakProvider;
 import com.sni.dms.entities.UserEntity;
 import com.sni.dms.requests.CreateUserRequest;
+import com.sni.dms.requests.UserRequest;
 import com.sni.dms.services.UserService;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
@@ -40,7 +41,7 @@ public class KeycloakAdminClientService {
         kcUser.setEmail(user.getEmail());
         kcUser.setEnabled(true);
         kcUser.setEmailVerified(false);
-
+        kcUser.setRequiredActions(Collections.singletonList("Configure OTP"));
 
 
         Response response = usersResource.create(kcUser);
@@ -60,19 +61,20 @@ public class KeycloakAdminClientService {
         return response;
 
     }
-    public boolean updateKeyCloakUser(UserEntity user){
+    public boolean updateKeyCloakUser(UserRequest user){
         UsersResource usersResource = kcProvider.getInstance().realm(realm).users();
         CredentialRepresentation credential =createPasswordCredentials(user.getPassword());
         UserRepresentation kcUser = new UserRepresentation();
-        kcUser.setUsername(user.getUsername());
+        kcUser.setUsername(user.getUser().getUsername());
+        kcUser.setRequiredActions(Collections.singletonList("Configure OTP"));
 //        kcUser.setFirstName(user.getFirstname());
 //        kcUser.setLastName(user.getLastname());
 //        kcUser.setEmail(user.getEmail());
         kcUser.setCredentials(Collections.singletonList(credential));
-        if(UserService.getKeyCloakUser(user.getUsername())!=null) {
-            usersResource.get(UserService.getKeyCloakUser(user.getUsername()).getId()).update(kcUser);
+        if(UserService.getKeyCloakUser(user.getUser().getUsername())!=null) {
+            usersResource.get(UserService.getKeyCloakUser(user.getUser().getUsername()).getId()).update(kcUser);
 
-            UserRepresentation userRepresentation = UserService.getKeyCloakUser(user.getUsername());
+            UserRepresentation userRepresentation = UserService.getKeyCloakUser(user.getUser().getUsername());
             UsersResource users = UserService.getUsersFromKeyCloak();
             UserResource userResource = users.get(userRepresentation.getId());
 
@@ -81,7 +83,7 @@ public class KeycloakAdminClientService {
             userResource.roles().realmLevel().remove(oldRoles);
 
 
-            userResource.roles().realmLevel().add(UserService.getRealmRole(user.getRole()));
+            userResource.roles().realmLevel().add(UserService.getRealmRole(user.getUser().getRole()));
             return true;
         }
         else{

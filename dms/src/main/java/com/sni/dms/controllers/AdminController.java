@@ -10,6 +10,7 @@ import com.sni.dms.exceptions.NotFoundException;
 import com.sni.dms.records.ResponseRecord;
 import com.sni.dms.repositories.UserRepository;
 import com.sni.dms.requests.CreateUserRequest;
+import com.sni.dms.requests.UserRequest;
 import com.sni.dms.service.KeycloakAdminClientService;
 import com.sni.dms.services.FilesService;
 import com.sni.dms.services.UserService;
@@ -37,15 +38,15 @@ public class AdminController {
     }
 
     @PostMapping("/admin/users")
-    public ResponseEntity<ResponseRecord> saveUser(@RequestBody UserEntity user){
+    public ResponseEntity<ResponseRecord> saveUser(@RequestBody UserRequest uR){
         System.out.println("try");
+        UserEntity user= uR.getUser();;
         try {
             service.checkIfUsernameIsAlreadyInUse(user.getUsername());
-            user.setPassword(Hashing.sha512().hashString(user.getPassword(), StandardCharsets.UTF_8).toString());
 
             CreateUserRequest userRequest = new CreateUserRequest();
             userRequest.setUsername(user.getUsername());
-            userRequest.setPassword(user.getPassword());
+            userRequest.setPassword(uR.getPassword());
             userRequest.setFirstname("");
             userRequest.setEmail("");
             userRequest.setLastname("");
@@ -91,25 +92,25 @@ public class AdminController {
     }
 
     @PutMapping("/admin/users")
-    public ResponseEntity<ResponseRecord>updateUser(@RequestBody UserEntity user){
+    public ResponseEntity<ResponseRecord>updateUser(@RequestBody UserRequest user){
 
         try {
-            //service.checkIfUsernameIsAlreadyInUse(user.getUsername());
-            //ako je prazno polje sifra, ostavi staru sifru
-            if ("".equals(user.getPassword())) {
-                user.setPassword(service.getOldPassword(user));
-            }
-            //ako nije sacuvaj hash lozinke u bazu
-            else {
-                user.setPassword(Hashing.sha512().hashString(user.getPassword(), StandardCharsets.UTF_8).toString());
-            }
-            user.setIsDeleted((byte) 0);
-            service.updateUser(user);
+//            //service.checkIfUsernameIsAlreadyInUse(user.getUsername());
+//            //ako je prazno polje sifra, ostavi staru sifru iz keycloaka
+//            if ("".equals(user.getPassword())) {
+//                user.setPassword(service.getOldPassword(user));
+//            }
+//            //ako nije sacuvaj hash lozinke u bazu
+//            else {
+//                user.setPassword(Hashing.sha512().hashString(user.getPassword(), StandardCharsets.UTF_8).toString());
+//            }
+            user.getUser().setIsDeleted((byte) 0);
+            service.updateUser(user.getUser());
             kcAdminClient.updateKeyCloakUser(user);
 
 
-                service.assignRole(user);
-                service.assignCRUDPrivilegis(user);
+                service.assignRole(user.getUser());
+                service.assignCRUDPrivilegis(user.getUser());
 
                 return  ResponseEntity.ok(new ResponseRecord(200,""));
 

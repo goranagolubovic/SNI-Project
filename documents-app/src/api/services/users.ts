@@ -23,5 +23,15 @@ const fetchUserInfo = async (username: string) => {
     return response;
 };
 
+const fetchRole = async (username: string) => {
+    const requestOptions = {
+        headers,
+        body: username,
+    };
 
-export { login, fetchUserInfo };
+    const response = await post(BACKEND_URL + "role", requestOptions);
+    return response;
+};
+
+
+export { login, fetchUserInfo, fetchRole };

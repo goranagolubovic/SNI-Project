@@ -63,9 +63,6 @@
     font-size: 1vw;
   }
 }
-.codeError {
-  color: red;
-}
-.credentialsError {
+.errorMsg {
   color: white;
 }

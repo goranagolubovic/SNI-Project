@@ -110,10 +110,14 @@ const UpdateUser = () => {
       userData.isDeleteApproved = isDeleteAllowed ? 1 : 0;
     }
     userData.userDir = formatUserDir(startDir + userData.userDir);
-    alert(JSON.stringify(userData));
+    const { password, ...user } = userData;
+    const updatedData = {
+      user: user,
+      password: password,
+    };
+    alert(JSON.stringify(updatedData));
     try {
-      const response = await updateUser(JSON.stringify(userData));
-      const data = await response.json();
+      const response = await updateUser(JSON.stringify(updatedData));
       if (response.status === 401) {
         setUpdateError(SESSION_EXPIRED);
       } else if (response.status === 403) {
@@ -164,12 +168,14 @@ const UpdateUser = () => {
 
           <PasswordInput
             button={"visible"}
-            placeholder={"*****"}
+            placeholder={"Password"}
             icon="noicon"
             className={
               errors.password ? styles.componentWithError : styles.component
             }
-            {...register("password")}
+            {...register("password", {
+              required: true,
+            })}
           />
           {errors.password?.type && (
             <ErrorComponent name="Password" type={errors.password?.type} />

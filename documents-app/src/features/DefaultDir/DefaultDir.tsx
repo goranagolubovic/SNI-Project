@@ -276,8 +276,7 @@ const DefaultDir = () => {
       username: username,
     };
     try {
-      console.log(currentDir);
-      getPreviousDir();
+      console.log("REMOVING" + currentDir);
       let res = await deleteFile(JSON.stringify(data));
       let responseData = await res.json();
       if (responseData.status === 200) {
@@ -287,6 +286,7 @@ const DefaultDir = () => {
       } else if (responseData.status === 404) {
         alert(responseData.message);
       }
+      getPreviousDir();
     } catch (err) {
       console.log(err);
     }
@@ -361,6 +361,7 @@ const DefaultDir = () => {
         alert(resData.message);
       }
       if (resData.status === 200) {
+        setIsDirContentChanged(!isDirContentChanged);
       }
     } catch (err) {
       console.log(err);
@@ -467,11 +468,12 @@ const DefaultDir = () => {
               )}
             </div>
             <div className={styles.actionsContent}>
-              {role !== "admin" && (
-                <Button type="add" onClick={() => unableEditing()}>
-                  EDIT FILE
-                </Button>
-              )}
+              {role !== "admin" &&
+                !file.endsWith(".png" || ".jpeg" || "jpg" || "svg") && (
+                  <Button type="add" onClick={() => unableEditing()}>
+                    EDIT FILE
+                  </Button>
+                )}
             </div>
             {role === "document_admin" && (
               <div className={styles.actionsContent}>

@@ -108,7 +108,6 @@ public class UserService {
         UserEntity e = getUser(user.getUsername());
         if (e != null) {
             e.setUsername(user.getUsername());
-            e.setPassword((user.getPassword()));
             e.setRole(user.getRole());
             e.setIpAddress(user.getIpAddress());
             e.setUserDir(user.getUserDir());
@@ -126,9 +125,9 @@ public class UserService {
 
     public UserEntity getUser(String username) throws NotFoundException {
         Optional<UserEntity> user = userRepository.findAll().stream()
-                .filter(elem -> elem.getUsername().equals(username)).findAny();
+                .filter(elem -> elem.getUsername().equals(username) && elem.getIsDeleted()==0).findAny();
         System.out.println("Ussername"+username);
-        if(user.isEmpty() && user.get().getIsDeleted()==0){
+        if(user.isEmpty()){
             throw  new NotFoundException("User is not found.");
         }
         return user.get();
@@ -165,12 +164,6 @@ public class UserService {
         userResource.roles().realmLevel().add(getRealmRole(user.getRole()));
     }
 
-    public String getOldPassword(UserEntity user){
-
-        Optional<UserEntity> optUser= userRepository.findAll().stream()
-                .filter(e->e.getUsername().equals(user.getUsername())).findAny();
-        return optUser.isPresent() ? optUser.get().getPassword() : "";
-    }
 
     public int getIdOfUser(String username) {
         try {
@@ -194,4 +187,12 @@ public class UserService {
                 }
     }
 
+    public String getRole(String username) throws NotFoundException {
+        Optional<UserEntity>user=userRepository.findAll().stream().filter(elem->elem.getIsDeleted()==0 && elem.getUsername().equals(username))
+                .findAny();
+        if(user.isEmpty()){
+            throw  new NotFoundException("User is not found");
+        }
+        return user.get().getRole();
+    }
 }

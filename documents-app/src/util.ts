@@ -7,6 +7,7 @@ export const getUsername = () => {
     return JSON.parse(localStorage.getItem("USERNAME") || "");
 }
 
+
 // export const modifeDirFileName = (name: string, dir: string) => {
 //     //console.log(element)
 //     const totalLength = name.length;

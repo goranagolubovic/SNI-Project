@@ -17,9 +17,6 @@ public class UserEntity {
     @Column(name = "username")
     private String username;
     @Basic
-    @Column(name = "password")
-    private String password;
-    @Basic
     @Column(name = "role")
     private String role;
     @Basic
@@ -57,14 +54,6 @@ public class UserEntity {
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getRole() {
@@ -135,11 +124,11 @@ public class UserEntity {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UserEntity that = (UserEntity) o;
-        return idUser == that.idUser && Objects.equals(username, that.username) && Objects.equals(password, that.password) && Objects.equals(role, that.role) && Objects.equals(userDir, that.userDir) && Objects.equals(ipAddress, that.ipAddress) && Objects.equals(isCreateApproved, that.isCreateApproved) && Objects.equals(isReadApproved, that.isReadApproved) && Objects.equals(isUpdateApproved, that.isUpdateApproved) && Objects.equals(isDeleteApproved, that.isDeleteApproved);
+        return idUser == that.idUser && Objects.equals(username, that.username)  && Objects.equals(role, that.role) && Objects.equals(userDir, that.userDir) && Objects.equals(ipAddress, that.ipAddress) && Objects.equals(isCreateApproved, that.isCreateApproved) && Objects.equals(isReadApproved, that.isReadApproved) && Objects.equals(isUpdateApproved, that.isUpdateApproved) && Objects.equals(isDeleteApproved, that.isDeleteApproved);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(idUser, username, password, role, userDir, ipAddress, isCreateApproved, isReadApproved, isUpdateApproved, isDeleteApproved);
+        return Objects.hash(idUser, username, role, userDir, ipAddress, isCreateApproved, isReadApproved, isUpdateApproved, isDeleteApproved);
     }
 }

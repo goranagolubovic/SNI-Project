@@ -98,8 +98,10 @@ public class FilesController {
         }
         catch (NotFoundException exception){
             return ResponseEntity.ok(new ResponseRecord(404,exception.getMessage()));
-        } catch (InternalServerError e) {
-            return  ResponseEntity.ok(new ResponseRecord(500,e.getMessage()));
+        } catch (InternalServerError e1) {
+            return  ResponseEntity.ok(new ResponseRecord(500,e1.getMessage()));
+        } catch (ConflictException e2) {
+            return ResponseEntity.ok(new ResponseRecord(409, e2.getMessage()));
         }
     }
 

@@ -63,7 +63,7 @@ public class FilesService {
 
     private void checkIfTheSameFileExists(FileEntity fileEntity) throws ConflictException {
         boolean exists=filesRepository.findAll().stream()
-                .anyMatch(elem->elem.getUserIdUser()==fileEntity.getUserIdUser() && elem.getName().equals(fileEntity.getName()));
+                .anyMatch(elem->elem.getUserIdUser()==fileEntity.getUserIdUser() && elem.getIsDeleted()==0 && elem.getName().equals(fileEntity.getName()));
         if(exists){
             throw  new ConflictException("There is file with same name in the folder.");
         }
@@ -103,10 +103,21 @@ public class FilesService {
             filesRepository.save(fileEntity);
         }
     }
-
+    private FileEntity mapFileNameToFileEntity(String filename) throws NotFoundException {
+        Optional<FileEntity>opt= filesRepository.findAll().stream().filter(elem->
+                elem.getName().equals(filename)
+        ).findAny();
+//        filesRepository.findAll().stream().forEach(elem->
+//                System.out.println(elem.getName()+" "+path)
+//        );
+        if(opt.isEmpty()){
+            throw new NotFoundException("File is not found.");
+        }
+        return opt.get();
+    }
     private FileEntity findFileEntityFor(String path)throws NotFoundException{
         Optional<FileEntity>opt= filesRepository.findAll().stream().filter(elem->
-            elem.getName().equals(path)
+            elem.getName().equals(path) && elem.getIsDeleted()==0
         ).findAny();
 //        filesRepository.findAll().stream().forEach(elem->
 //                System.out.println(elem.getName()+" "+path)
@@ -135,7 +146,14 @@ public class FilesService {
     }
 
 
-    public void uploadFile(MultipartFile file,String folderPath,String username) throws NotFoundException, InternalServerError {
+    public void uploadFile(MultipartFile file,String folderPath,String username) throws NotFoundException, InternalServerError, ConflictException {
+        String name=folderPath+"/"+file.getOriginalFilename();
+        int idUser=getIdForUser(username);
+        boolean isThereSameFile=filesRepository.findAll().stream().anyMatch(elem->elem.getName().equals(name) && elem.getIsDeleted()==0 &&
+                elem.getUserIdUser()==idUser);
+        if(isThereSameFile){
+            throw  new ConflictException("There is file with same name in the folder.");
+        }
         File folder=new File(folderPath);
         try {
             FileUtils.copyInputStreamToFile(file.getInputStream(), new File(folder.getAbsolutePath()+File.separator+file.getOriginalFilename()));

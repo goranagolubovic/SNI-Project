@@ -68,9 +68,15 @@ const AddUser = () => {
     }
     userData.userDir = INITIAL_DIR + username + "/" + userData.userDir;
     userData.userDir = formatUserDir(userData.userDir);
-    alert(JSON.stringify(userData));
+
+    const { password, ...user } = userData;
+    const data = {
+      user: user,
+      password: password,
+    };
+    alert(JSON.stringify(data));
     try {
-      const response = await add(JSON.stringify(userData));
+      const response = await add(JSON.stringify(data));
       if (response.status === 401) {
         setAddError(SESSION_EXPIRED);
       } else if (response.status === 403) {

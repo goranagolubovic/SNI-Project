@@ -2,7 +2,6 @@ package com.sni.dms.controllers;
 
 import com.google.common.hash.Hashing;
 import com.google.gson.Gson;
-import com.sni.dms.configuration.TotpManager;
 import com.sni.dms.entities.FileEntity;
 import com.sni.dms.entities.UserEntity;
 import com.sni.dms.exceptions.ConflictException;
@@ -19,7 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.ws.rs.core.Response;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -31,13 +29,11 @@ public class AdminController {
     private final KeycloakAdminClientService kcAdminClient;
     private final UserService service;
     private final FilesService filesService;
-    private TotpManager totpManager;
 
-    public AdminController(KeycloakAdminClientService kcAdminClient,UserService service,FilesService filesService,TotpManager totpManager) {
+    public AdminController(KeycloakAdminClientService kcAdminClient,UserService service,FilesService filesService) {
         this.kcAdminClient = kcAdminClient;
         this.service=service;
         this.filesService=filesService;
-        this.totpManager=totpManager;
     }
 
     @PostMapping("/admin/users")
@@ -55,8 +51,6 @@ public class AdminController {
             userRequest.setLastname("");
             service.createDefaultDirForUser(user.getUserDir());
             user.setIsDeleted((byte) 0);
-            user.setIsFirstSignIn((byte)1);
-            user.setSecret(totpManager.generateSecret());
             UserEntity createdUser = repository.save(user);
 
             FileEntity fileEntity = new FileEntity();

@@ -43,12 +43,6 @@ public class UserEntity {
     @Basic
     @Column(name = "is_deleted")
     private Byte isDeleted;
-    @Basic
-    @Column(name = "secret")
-    private String secret;
-    @Basic
-    @Column(name = "is_first_sign_in")
-    private Byte isFirstSignIn;
     public int getIdUser() {
         return idUser;
     }
@@ -136,21 +130,6 @@ public class UserEntity {
         this.isDeleted = isDeleted;
     }
 
-    public String getSecret() {
-        return secret;
-    }
-
-    public void setSecret(String secret) {
-        this.secret = secret;
-    }
-
-    public Byte getIsFirstSignIn() {
-        return isFirstSignIn;
-    }
-
-    public void setIsFirstSignIn(Byte isFirstSignIn) {
-        this.isFirstSignIn = isFirstSignIn;
-    }
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -5,8 +5,13 @@ import Table from "../../features/Table/Table";
 import { Button } from "../../shared/components/Button/Button";
 import PersonAdd from "@mui/icons-material/PersonAdd";
 import { useHistory } from "react-router-dom";
+import { logoutUser } from "../..";
+import { ExitToApp } from "@mui/icons-material";
 const SystemAdmin = () => {
   const history = useHistory();
+  const logout = () => {
+    logoutUser();
+  };
   return (
     <div className={styles.admin}>
       <Header />
@@ -19,6 +24,10 @@ const SystemAdmin = () => {
         >
           <PersonAdd style={{ color: "white", fontSize: 20 }}></PersonAdd> ADD
           USER
+        </Button>
+        <Button type="add" width="150px" height="35px" onClick={() => logout()}>
+          <ExitToApp style={{ color: "white", fontSize: 20 }}></ExitToApp>{" "}
+          LOGOUT
         </Button>
       </div>
       <Table />

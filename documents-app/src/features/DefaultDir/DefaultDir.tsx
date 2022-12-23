@@ -4,6 +4,7 @@ import { readFile } from "fs/promises";
 import React, { useEffect, useReducer, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useHistory } from "react-router-dom";
+import { logoutUser } from "../..";
 import {
   createFile,
   deleteFile,
@@ -295,6 +296,11 @@ const DefaultDir = () => {
   const findFileChooser = () => {
     document.getElementById("getFile")?.click();
   };
+
+  const logout = () => {
+    logoutUser();
+  };
+
   const chooseFile = async (e: any) => {
     const reader = new FileReader();
 
@@ -429,6 +435,11 @@ const DefaultDir = () => {
                   />
                 </div>
               )}
+            </div>
+            <div className={styles.actionsContent}>
+              <Button type="add" onClick={() => logout()}>
+                LOGOUT
+              </Button>
             </div>
           </div>
 

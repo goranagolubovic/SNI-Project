@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.sni.dms.entities.FileEntity;
 import com.sni.dms.entities.UserEntity;
 import com.sni.dms.exceptions.ConflictException;
+import com.sni.dms.exceptions.ForbiddenAccessFromIpAddress;
 import com.sni.dms.exceptions.InternalServerError;
 import com.sni.dms.exceptions.NotFoundException;
 import com.sni.dms.repositories.FilesRepository;
@@ -86,7 +87,7 @@ public class FilesService {
         return opt.get().getIdfile();
     }
 
-    public void deleteFile(String path) throws NotFoundException{
+    public void deleteFile(String path,String username,String ip) throws NotFoundException, ForbiddenAccessFromIpAddress {
         File file=new File(path);
         System.out.println(file.toPath());
         if(file.exists()){
@@ -99,6 +100,11 @@ public class FilesService {
         }
         FileEntity fileEntity=findFileEntityFor(path);
         if(fileEntity!=null) {
+            Optional<UserEntity> user=userRepository.findById(fileEntity.getUserIdUser());
+            UserEntity u=user.get();
+            if(u.getRole().equals("client") && u.getIpAddress()!=null && !"".equals(u.getIpAddress()) && !u.getIpAddress().equals(ip)){
+                throw new ForbiddenAccessFromIpAddress("Cannot access app from this ip adress.");
+            }
             fileEntity.setIsDeleted((byte) 1);
             filesRepository.save(fileEntity);
         }
@@ -128,9 +134,15 @@ public class FilesService {
        return opt.get();
     }
 
-    public byte[] readFile(DownloadFileRequest downloadFileRequest) throws InternalServerError {
+    public byte[] readFile(DownloadFileRequest downloadFileRequest,String ip) throws InternalServerError, NotFoundException, ForbiddenAccessFromIpAddress {
         String filePath=downloadFileRequest.getFilePath();
-        String userDir=downloadFileRequest.getUserDir();
+        String username=downloadFileRequest.getUsername();
+        int userId=getIdForUser(username);
+        Optional<UserEntity>user=userRepository.findById(userId);
+        UserEntity u=user.get();
+        if(u.getRole().equals("client") && u.getIpAddress()!=null && !"".equals(u.getIpAddress()) && !u.getIpAddress().equals(ip)){
+            throw new ForbiddenAccessFromIpAddress("Cannot access app from this ip adress.");
+        }
         System.out.println("File is"+filePath);
         File file=new File(filePath);
         byte[] bytes={};
@@ -146,9 +158,14 @@ public class FilesService {
     }
 
 
-    public void uploadFile(MultipartFile file,String folderPath,String username) throws NotFoundException, InternalServerError, ConflictException {
+    public void uploadFile(MultipartFile file,String folderPath,String username,String ip) throws NotFoundException, InternalServerError, ConflictException, ForbiddenAccessFromIpAddress {
         String name=folderPath+"/"+file.getOriginalFilename();
         int idUser=getIdForUser(username);
+        Optional<UserEntity>user=userRepository.findById(idUser);
+        UserEntity u=user.get();
+        if(u.getRole().equals("client") && u.getIpAddress()!=null && !"".equals(u.getIpAddress()) && !u.getIpAddress().equals(ip)){
+            throw new ForbiddenAccessFromIpAddress("Cannot access app from this ip adress.");
+        }
         boolean isThereSameFile=filesRepository.findAll().stream().anyMatch(elem->elem.getName().equals(name) && elem.getIsDeleted()==0 &&
                 elem.getUserIdUser()==idUser);
         if(isThereSameFile){
@@ -181,7 +198,14 @@ public class FilesService {
     }
 
 
-    public void editFile(EditFileRequest editFileRequest) throws InternalServerError {
+    public void editFile(EditFileRequest editFileRequest,String ip) throws InternalServerError, NotFoundException, ForbiddenAccessFromIpAddress {
+        String username=editFileRequest.getUsername();
+        int userId=getIdForUser(username);
+        Optional<UserEntity>user=userRepository.findById(userId);
+        UserEntity u=user.get();
+        if(u.getRole().equals("client") && u.getIpAddress()!=null && !"".equals(u.getIpAddress()) && !u.getIpAddress().equals(ip)){
+            throw new ForbiddenAccessFromIpAddress("Cannot access app from this ip adress.");
+        }
         File fileOld=new File(editFileRequest.getFilePath());
         fileOld.delete();
         File fileNew=new File(editFileRequest.getFilePath());
@@ -197,11 +221,17 @@ public class FilesService {
 
     }
 
-    public String getParentDir(String currentDirJSON) throws  NotFoundException{
+    public String getParentDir(String currentDirJSON,String ip) throws NotFoundException, ForbiddenAccessFromIpAddress {
         String currentDir=new Gson().fromJson(currentDirJSON,String.class);
         Optional<FileEntity>opt= filesRepository.findAll().stream().filter(elem->elem.getName().equals(currentDir)).findAny();
         if(opt.isEmpty()){
             throw  new NotFoundException("File is not found");
+        }
+        int userId=opt.get().getUserIdUser();
+        Optional<UserEntity>user=userRepository.findById(userId);
+        UserEntity u=user.get();
+        if(u.getRole().equals("client") && u.getIpAddress()!=null && !"".equals(u.getIpAddress()) && !u.getIpAddress().equals(ip)){
+            throw new ForbiddenAccessFromIpAddress("Cannot access app from this ip adress.");
         }
         int index=opt.get().getRootDir();
         return  filesRepository.findById(index).get().getName();
@@ -217,7 +247,7 @@ public class FilesService {
     }
 
 
-    public void moveFile(MoveFileRequest moveFileRequest) throws NotFoundException, InternalServerError {
+    public void moveFile(MoveFileRequest moveFileRequest,String ip) throws NotFoundException, InternalServerError, ForbiddenAccessFromIpAddress {
         String destinationDirPath=moveFileRequest.getDestinationDir();
         String filePath = moveFileRequest.getFilePath();
         String fileName=moveFileRequest.getFileName();
@@ -236,6 +266,12 @@ public class FilesService {
             throw  new NotFoundException("File is not found");
         }
         FileEntity fileEntity=opt.get();
+        int userId=opt.get().getUserIdUser();
+        Optional<UserEntity>user=userRepository.findById(userId);
+        UserEntity u=user.get();
+        if(u.getRole().equals("client") && u.getIpAddress()!=null && !"".equals(u.getIpAddress()) && !u.getIpAddress().equals(ip)){
+            throw new ForbiddenAccessFromIpAddress("Cannot access app from this ip adress.");
+        }
         fileEntity.setName(destinationDirPath+"/"+fileName);
         fileEntity.setRootDir(getIdForDir(destinationDirPath));
         filesRepository.save(fileEntity);

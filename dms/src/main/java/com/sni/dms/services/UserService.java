@@ -4,6 +4,7 @@ import com.sni.dms.configuration.KeycloakProvider;
 import com.sni.dms.entities.FileEntity;
 import com.sni.dms.entities.UserEntity;
 import com.sni.dms.exceptions.ConflictException;
+import com.sni.dms.exceptions.ForbiddenAccessFromIpAddress;
 import com.sni.dms.exceptions.InternalServerError;
 import com.sni.dms.exceptions.NotFoundException;
 import com.sni.dms.repositories.FilesRepository;
@@ -65,8 +66,8 @@ public class UserService {
         return roleList;
     }
 
-    public void delete(String username) throws NotFoundException, InternalServerError {
-       UserEntity user=getUser(username);
+    public void delete(String username,String ip) throws NotFoundException, InternalServerError, ForbiddenAccessFromIpAddress {
+       UserEntity user=getUser(username,ip);
 //        Optional<UserEntity> user = userRepository.findAll().stream()
 //                .filter(elem -> elem.getUsername().equals(username)).findAny();
             Optional<FileEntity> fileEntity=filesRepository.findAll().stream().filter(elem->elem.getName().equals(user.getUserDir())).findAny();
@@ -103,9 +104,9 @@ public class UserService {
         }
     }
 
-    public void updateUser(UserEntity user) throws NotFoundException {
+    public void updateUser(UserEntity user,String ip) throws NotFoundException, ForbiddenAccessFromIpAddress {
 
-        UserEntity e = getUser(user.getUsername());
+        UserEntity e = getUser(user.getUsername(),ip);
         if (e != null) {
             e.setUsername(user.getUsername());
             e.setRole(user.getRole());
@@ -123,14 +124,18 @@ public class UserService {
 
     }
 
-    public UserEntity getUser(String username) throws NotFoundException {
+    public UserEntity getUser(String username,String ip) throws NotFoundException, ForbiddenAccessFromIpAddress {
         Optional<UserEntity> user = userRepository.findAll().stream()
                 .filter(elem -> elem.getUsername().equals(username) && elem.getIsDeleted()==0).findAny();
         System.out.println("Ussername"+username);
         if(user.isEmpty()){
             throw  new NotFoundException("User is not found.");
         }
-        return user.get();
+        UserEntity u=user.get();
+        if(u.getRole().equals("client") && u.getIpAddress()!=null && !"".equals(u.getIpAddress()) && !u.getIpAddress().equals(ip)){
+            throw new ForbiddenAccessFromIpAddress("Cannot access app from this ip adress.");
+        }
+        return u;
     }
 
     public void createDefaultDirForUser(String userDir) {
@@ -165,9 +170,9 @@ public class UserService {
     }
 
 
-    public int getIdOfUser(String username) {
+    public int getIdOfUser(String username,String ip) throws ForbiddenAccessFromIpAddress {
         try {
-            UserEntity user = getUser(username);
+            UserEntity user = getUser(username,ip);
             return user.getIdUser();
         }
         catch (NotFoundException exception){
@@ -187,12 +192,16 @@ public class UserService {
                 }
     }
 
-    public String getRole(String username) throws NotFoundException {
+    public String getRole(String username,String ip) throws NotFoundException, ForbiddenAccessFromIpAddress {
         Optional<UserEntity>user=userRepository.findAll().stream().filter(elem->elem.getIsDeleted()==0 && elem.getUsername().equals(username))
                 .findAny();
         if(user.isEmpty()){
             throw  new NotFoundException("User is not found");
         }
-        return user.get().getRole();
+        UserEntity u=user.get();
+        if(u.getRole().equals("client") && u.getIpAddress()!=null && !"".equals(u.getIpAddress()) && !u.getIpAddress().equals(ip)){
+            throw new ForbiddenAccessFromIpAddress("Cannot access app from this ip adress.");
+        }
+        return u.getRole();
     }
 }

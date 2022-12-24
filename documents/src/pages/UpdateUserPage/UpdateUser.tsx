@@ -16,7 +16,7 @@ import {
   UPDATE_FAILED,
 } from "../../validation_errors";
 import { formatUserDir } from "../../util";
-import { NOT_AUTHORIZED, SESSION_EXPIRED } from "../../constants";
+import { INITIAL_DIR, NOT_AUTHORIZED, SESSION_EXPIRED } from "../../constants";
 export interface UpdateUserProps {
   username: string;
 }
@@ -51,7 +51,11 @@ const UpdateUser = () => {
         setIsReadAllowed(data.isReadApproved);
         setIsUpdateAllowed(data.isUpdateApproved);
         setIsDeleteAllowed(data.isDeleteApproved);
-      } else if (data.status === 404 || data.status === 409) {
+      } else if (
+        data.status === 404 ||
+        data.status === 409 ||
+        data.status === 500
+      ) {
         setUpdateError(data.message);
       } else {
         setUpdatingFailed(true);
@@ -109,7 +113,14 @@ const UpdateUser = () => {
       userData.isUpdateApproved = isUpdateAllowed ? 1 : 0;
       userData.isDeleteApproved = isDeleteAllowed ? 1 : 0;
     }
+    if (userData.role === "document_admin") {
+      userData.ipAddress = "";
+    }
     userData.userDir = formatUserDir(startDir + userData.userDir);
+    if (userData.role === "admin") {
+      userData.ipAddress = "";
+      userData.userDir = INITIAL_DIR;
+    }
     const { password, ...user } = userData;
     const updatedData = {
       user: user,
@@ -129,7 +140,7 @@ const UpdateUser = () => {
         }
         if (responseData.status === 409) {
           setUpdateError(responseData.message);
-        } else if (response.status === 404) {
+        } else if (responseData.status === 404 || responseData.status === 500) {
           setUpdateError(responseData.message);
         } else {
           setUpdatingFailed(true);
@@ -181,34 +192,45 @@ const UpdateUser = () => {
             <ErrorComponent name="Password" type={errors.password?.type} />
           )}
 
-          <Input
-            icon="noicon"
-            placeholder={ipAddress === "" ? "Ip address" : ipAddress}
-            className={
-              errors.ipAddress ? styles.componentWithError : styles.component
-            }
-            {...register("ipAddress")}
-          />
-          {errors.ipAddress?.type && (
-            <ErrorComponent name="Ip address" type={errors.username?.type} />
-          )}
-          <div className={styles.home_dir}>
-            <p className={styles.dir}>{startDir}</p>
-            <Input
-              icon="noicon"
-              placeholder="Home directory"
-              className={
-                errors.userDir ? styles.componentWithError : styles.component
-              }
-              {...register("userDir")}
-            />
-            {errors.userDir?.type && (
-              <ErrorComponent
-                name="Home directory"
-                type={errors.userDir?.type}
+          {role !== "admin" && role !== "document_admin" && (
+            <div>
+              <Input
+                icon="noicon"
+                placeholder={ipAddress === "" ? "Ip address" : ipAddress}
+                className={
+                  errors.ipAddress
+                    ? styles.componentWithError
+                    : styles.component
+                }
+                {...register("ipAddress")}
               />
-            )}
-          </div>
+              {errors.ipAddress?.type && (
+                <ErrorComponent
+                  name="Ip address"
+                  type={errors.username?.type}
+                />
+              )}
+            </div>
+          )}
+          {role !== "admin" && (
+            <div className={styles.home_dir}>
+              <p className={styles.dir}>{startDir}</p>
+              <Input
+                icon="noicon"
+                placeholder="Home directory"
+                className={
+                  errors.userDir ? styles.componentWithError : styles.component
+                }
+                {...register("userDir")}
+              />
+              {errors.userDir?.type && (
+                <ErrorComponent
+                  name="Home directory"
+                  type={errors.userDir?.type}
+                />
+              )}
+            </div>
+          )}
           <Select
             text={role}
             values={roles}
@@ -270,9 +292,6 @@ const UpdateUser = () => {
               }
             />
           </div>
-          <Button type="link" onClick={() => history.push("/")}>
-            Sign in
-          </Button>
         </form>
       </FormProvider>
     </div>

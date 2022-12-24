@@ -41,10 +41,10 @@ const Table = () => {
     try {
       let res = await deleteUser(username);
       let data = await res.json();
-      if (data.status !== 403) {
-        if (data.status === 401) {
+      if (res.status !== 403) {
+        if (res.status === 401) {
           setTokenExpired(true);
-        } else if (data.status === 404) {
+        } else if (data.status === 404 || data.status === 500) {
           alert(data.message);
         } else {
           setTableContentChanged(!tableContentChanged);

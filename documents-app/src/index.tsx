@@ -35,7 +35,7 @@ keycloak
     console.error("Authenticated Failed");
   });
 
-var logoutOptions = { redirectUri: "http://localhost:3001" };
+var logoutOptions = { redirectUri: "https://localhost:3001" };
 
 keycloak.onTokenExpired = () => {
   console.log("token expired", keycloak.token);

@@ -40,6 +40,7 @@ const DefaultDir = () => {
   const [username, setUsername] = useState("");
   const [file, setFile] = useState("");
   const [isAddFileActive, setIsFileActive] = useState(false);
+  const [message, setMessage] = useState("");
   const [isAddFOlderActive, setIsFolderActive] = useState(false);
   const [isUserInfoFetchingCompleted, setIsUserInfoFetchingCompleted] =
     useState(false);
@@ -122,7 +123,7 @@ const DefaultDir = () => {
         alert(resData.message);
       } else if (res.status === 403 || res.status === 401) {
         history.push("/");
-      } else if (resData.status === 404) {
+      } else if (resData.status === 404 || resData.status === 500) {
         alert(resData.message);
       }
     } catch (err) {
@@ -220,7 +221,8 @@ const DefaultDir = () => {
         setRole(respData.user.role);
         setUsername(respData.user.username);
       } else {
-        //alert(respData.message);
+        setMessage(respData.loginMessage);
+        console.log(respData.loginMessage);
       }
     } catch (err) {
       console.log(err);
@@ -241,6 +243,8 @@ const DefaultDir = () => {
         resData.status === 404
       ) {
         history.push("/");
+      } else if (resData.status === 500) {
+        alert(resData.message);
       }
     } catch (err) {
       console.log(err);
@@ -263,7 +267,11 @@ const DefaultDir = () => {
         getFiles(currentDir);
       } else if (res.status === 403 || res.status === 401) {
         history.push("/");
-      } else if (resData.status === 404 || resData.status === 409) {
+      } else if (
+        resData.status === 404 ||
+        resData.status === 409 ||
+        resData.status === 500
+      ) {
         alert(resData.message);
       }
     } catch (err) {
@@ -284,7 +292,7 @@ const DefaultDir = () => {
         setFile("");
       } else if (responseData.status === 403 || responseData.status === 401) {
         history.push("/");
-      } else if (responseData.status === 404) {
+      } else if (responseData.status === 404 || responseData.status === 500) {
         alert(responseData.message);
       }
       getPreviousDir();
@@ -376,7 +384,7 @@ const DefaultDir = () => {
 
   return (
     <div className={styles.centralContainer}>
-      {file === "" && (
+      {file === "" && message === "" && (
         <div className={styles.centralContainer}>
           <div className={styles.actions}>
             <div className={styles.actionsContent}>
@@ -499,7 +507,7 @@ const DefaultDir = () => {
           </div>
         )}
         {/* <iframe src={fileContent}></iframe> */}
-        {file != "" && (
+        {file != "" && message === "" && (
           <div className={styles.editFileContainer}>
             {!file.endsWith(".png" || ".jpeg" || "jpg" || "svg") &&
               !editFileContent && <p>{fileContent}</p>}
@@ -542,6 +550,7 @@ const DefaultDir = () => {
             )}
           </div>
         )}
+        {message !== "" && <p className={styles.error}>{message}</p>}
       </div>
     </div>
   );

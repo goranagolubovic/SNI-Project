@@ -71,3 +71,10 @@
   padding-bottom: 2vw;
   width: 100%;
 }
+
+.error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: red;
+}

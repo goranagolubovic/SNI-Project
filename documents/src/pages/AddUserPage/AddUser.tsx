@@ -66,8 +66,15 @@ const AddUser = () => {
       userData.isUpdateApproved = isUpdateAllowed ? 1 : 0;
       userData.isDeleteApproved = isDeleteAllowed ? 1 : 0;
     }
+    if (userData.role === "document_admin") {
+      userData.ipAddress = "";
+    }
     userData.userDir = INITIAL_DIR + username + "/" + userData.userDir;
     userData.userDir = formatUserDir(userData.userDir);
+    if (userData.role === "admin") {
+      userData.ipAddress = "";
+      userData.userDir = INITIAL_DIR;
+    }
 
     const { password, ...user } = userData;
     const data = {
@@ -88,7 +95,7 @@ const AddUser = () => {
         }
         if (responseData.status === 409) {
           setAddError(responseData.message);
-        } else if (response.status === 404) {
+        } else if (responseData.status === 404 || responseData.status === 500) {
           setAddError(responseData.message);
         } else {
           setAddingFailed(true);
@@ -142,37 +149,48 @@ const AddUser = () => {
             <ErrorComponent name="Password" type={errors.password?.type} />
           )}
 
-          <Input
-            icon="noicon"
-            placeholder="Ip address"
-            className={
-              errors.ipAddress ? styles.componentWithError : styles.component
-            }
-            {...register("ipAddress")}
-          />
-          {errors.ipAddress?.type && (
-            <ErrorComponent name="Ip address" type={errors.username?.type} />
-          )}
-          <div className={styles.home_dir}>
-            <p className={styles.dir}>
-              {INITIAL_DIR}
-              {username}/
-            </p>
-            <Input
-              icon="noicon"
-              placeholder="Home directory"
-              className={
-                errors.userDir ? styles.componentWithError : styles.component
-              }
-              {...register("userDir")}
-            />
-            {errors.userDir?.type && (
-              <ErrorComponent
-                name="Home directory"
-                type={errors.userDir?.type}
+          {selectedRole !== "admin" && selectedRole !== "document_admin" && (
+            <div>
+              <Input
+                icon="noicon"
+                placeholder="Ip address"
+                className={
+                  errors.ipAddress
+                    ? styles.componentWithError
+                    : styles.component
+                }
+                {...register("ipAddress")}
               />
-            )}
-          </div>
+              {errors.ipAddress?.type && (
+                <ErrorComponent
+                  name="Ip address"
+                  type={errors.username?.type}
+                />
+              )}
+            </div>
+          )}
+          {selectedRole !== "admin" && (
+            <div className={styles.home_dir}>
+              <p className={styles.dir}>
+                {INITIAL_DIR}
+                {username}/
+              </p>
+              <Input
+                icon="noicon"
+                placeholder="Home directory"
+                className={
+                  errors.userDir ? styles.componentWithError : styles.component
+                }
+                {...register("userDir")}
+              />
+              {errors.userDir?.type && (
+                <ErrorComponent
+                  name="Home directory"
+                  type={errors.userDir?.type}
+                />
+              )}
+            </div>
+          )}
           <Select
             text="Choose a role"
             values={roles}
@@ -221,9 +239,6 @@ const AddUser = () => {
               }
             />
           </div>
-          <Button type="link" onClick={() => history.push("/")}>
-            Sign in
-          </Button>
         </form>
       </FormProvider>
     </div>

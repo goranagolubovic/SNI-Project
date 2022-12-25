@@ -3,7 +3,9 @@ package com.sni.dms.controllers;
 import com.sni.dms.exceptions.ForbiddenAccessFromIpAddress;
 import com.sni.dms.exceptions.NotFoundException;
 import com.sni.dms.records.ResponseRecord;
+import com.sni.dms.requests.ChangePasswordRequest;
 import com.sni.dms.responses.UserInfoResponse;
+import com.sni.dms.service.KeycloakAdminClientService;
 import com.sni.dms.services.UserService;
 import com.sni.dms.utils.HttpUtils;
 import org.keycloak.authorization.client.util.Http;
@@ -17,8 +19,10 @@ import javax.servlet.http.HttpServletRequest;
 @CrossOrigin("*")
 public class UserController {
     private final UserService service;
-    public UserController(UserService service) {
+    private  final KeycloakAdminClientService keycloakAdminClientService;
+    public UserController(UserService service, KeycloakAdminClientService keycloakAdminClientService) {
         this.service = service;
+        this.keycloakAdminClientService=keycloakAdminClientService;
     }
     @PostMapping("/info")
     public ResponseEntity<UserInfoResponse> getInfo(@RequestBody String username, HttpServletRequest request){
@@ -52,4 +56,19 @@ public class UserController {
             return ResponseEntity.ok(new ResponseRecord(500,e2.getMessage()));
         }
     }
+
+    @PutMapping ("/changePassword")
+    public ResponseEntity<ResponseRecord> changePassword(@RequestBody ChangePasswordRequest changePasswordRequest, HttpServletRequest httpServletRequest){
+        String ip = HttpUtils.getRequestIP(httpServletRequest);
+        try {
+            service.checkIp(changePasswordRequest.getUsername(),ip);
+            keycloakAdminClientService.changePassword(changePasswordRequest);
+            return ResponseEntity.ok(new ResponseRecord(200,"Password is changed successfully"));
+        } catch (NotFoundException e1) {
+            return ResponseEntity.ok(new ResponseRecord(404,e1.getMessage()));
+        } catch (ForbiddenAccessFromIpAddress e2) {
+            return ResponseEntity.ok(new ResponseRecord(500,e2.getMessage()));
+        }
+    }
+
 }

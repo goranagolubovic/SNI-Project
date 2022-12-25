@@ -2,6 +2,8 @@ package com.sni.dms.service;
 
 import com.sni.dms.configuration.KeycloakProvider;
 import com.sni.dms.entities.UserEntity;
+import com.sni.dms.repositories.UserRepository;
+import com.sni.dms.requests.ChangePasswordRequest;
 import com.sni.dms.requests.CreateUserRequest;
 import com.sni.dms.requests.UserRequest;
 import com.sni.dms.services.UserService;
@@ -20,13 +22,37 @@ import java.util.*;
 @Service
 public class KeycloakAdminClientService {
     @Value("${keycloak.realm}")
-    public String realm;
+    public  String realm;
 
-    private final KeycloakProvider kcProvider;
+    private   KeycloakProvider kcProvider = null;
+private  UserRepository userRepository;
 
-
-    public KeycloakAdminClientService(KeycloakProvider keycloakProvider,UserService userService) {
+    public KeycloakAdminClientService(KeycloakProvider keycloakProvider, UserRepository userRepository) {
         this.kcProvider = keycloakProvider;
+        this.userRepository=userRepository;
+    }
+
+    public  void changePassword(ChangePasswordRequest changePasswordRequest) {
+        UsersResource usersResource = kcProvider.getInstance().realm(realm).users();
+        CredentialRepresentation credentialRepresentation = createPasswordCredentials(changePasswordRequest.getPassword());
+        UserRepresentation kcUser = new UserRepresentation();
+        //kcUser.setUsername(changePasswordRequest.getUsername());
+       // kcUser.setRequiredActions(Collections.singletonList("Configure OTP"));
+//        kcUser.setFirstName(user.getFirstname());
+//        kcUser.setLastName(user.getLastname());
+//        kcUser.setEmail(user.getEmail());
+        kcUser.setCredentials(Collections.singletonList(credentialRepresentation));
+        if(UserService.getKeyCloakUser(changePasswordRequest.getUsername())!=null) {
+            //naci id user u bazi, proci kroz rep i updajte usera
+            Optional<UserEntity>user=userRepository.findAll().stream().filter(elem->elem.getIsDeleted()==0 && elem.getUsername().equals(changePasswordRequest.getUsername()))
+                            .findAny();
+            if(user.isPresent()){
+                UserEntity u=user.get();
+                u.setIsPasswordChanged((byte)1);
+                userRepository.save(u);
+            }
+            usersResource.get(UserService.getKeyCloakUser(changePasswordRequest.getUsername()).getId()).update(kcUser);
+        }
     }
 
     public Response createKeycloakUser(CreateUserRequest user) {
@@ -61,7 +87,7 @@ public class KeycloakAdminClientService {
         return response;
 
     }
-    public boolean updateKeyCloakUser(UserRequest user){
+    public  boolean updateKeyCloakUser(UserRequest user){
         UsersResource usersResource = kcProvider.getInstance().realm(realm).users();
         CredentialRepresentation credential =createPasswordCredentials(user.getPassword());
         UserRepresentation kcUser = new UserRepresentation();

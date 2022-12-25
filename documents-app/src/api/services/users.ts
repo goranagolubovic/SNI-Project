@@ -33,5 +33,13 @@ const fetchRole = async (username: string) => {
     return response;
 };
 
+const editPassword = async (data: any) => {
+    const requestOptions = {
+        headers,
+        body: data,
+    };
+    const response = await putWithCredentials(BACKEND_URL + "changePassword", requestOptions);
+    return response;
+}
 
-export { login, fetchUserInfo, fetchRole };
+export { login, fetchUserInfo, fetchRole, editPassword };

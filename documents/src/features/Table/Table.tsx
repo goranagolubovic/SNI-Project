@@ -6,8 +6,14 @@ import styles from "./Table.module.css";
 import { Build, Backspace } from "@mui/icons-material";
 import { Button } from "../../shared/components/Button/Button";
 import { useHistory } from "react-router-dom";
-import { deleteUser, fetchUsers } from "../../api/services/users";
+import {
+  deleteUser,
+  fetchUserInfo,
+  fetchUsers,
+} from "../../api/services/users";
 import { FORBIDDEN, SESSION_EXPIRED } from "../../constants";
+import { getUsername } from "../../util";
+import ChangePasswordDialog from "../ChangePasswordDialog/ChangePasswordDialog";
 const Table = () => {
   const [tokenExpired, setTokenExpired] = useState(false);
   const [forbidden, setForbidden] = useState(false);
@@ -49,7 +55,7 @@ const Table = () => {
         } else {
           setTableContentChanged(!tableContentChanged);
         }
-      } else if (data.status === 403) {
+      } else if (res.status === 403) {
         setForbidden(true);
       }
     } catch (err) {

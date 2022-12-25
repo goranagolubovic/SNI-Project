@@ -10,7 +10,8 @@ export type ButtonType =
   | "true"
   | "false"
   | "previous"
-  | "next";
+  | "next"
+  | "link";
 
 const buttonTypeClasses: Record<ButtonType, string> = {
   submit: styles.submit,
@@ -21,6 +22,7 @@ const buttonTypeClasses: Record<ButtonType, string> = {
   false: styles.false,
   previous: styles.previous,
   next: styles.next,
+  link: styles.link,
 };
 
 export interface ButtonProps

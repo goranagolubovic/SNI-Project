@@ -48,4 +48,23 @@ const updateUser = async (data: string) => {
     return response;
 }
 
-export { login, add, fetchUsers, deleteUser, getUser, updateUser };
+const editPassword = async (data: any) => {
+    const requestOptions = {
+        headers,
+        body: data,
+    };
+    const response = await putWithCredentials(BACKEND_URL + "changePassword", requestOptions);
+    return response;
+}
+const fetchUserInfo = async (username: string) => {
+    const requestOptions = {
+        headers,
+        body: username,
+    };
+
+    const response = await post(BACKEND_URL + "info", requestOptions);
+    return response;
+};
+
+
+export { login, add, fetchUsers, deleteUser, getUser, updateUser, editPassword, fetchUserInfo };

@@ -9,6 +9,8 @@ import com.sni.dms.exceptions.InternalServerError;
 import com.sni.dms.exceptions.NotFoundException;
 import com.sni.dms.repositories.FilesRepository;
 import com.sni.dms.repositories.UserRepository;
+import com.sni.dms.requests.ChangePasswordRequest;
+import com.sni.dms.service.KeycloakAdminClientService;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
@@ -66,8 +68,9 @@ public class UserService {
         return roleList;
     }
 
-    public void delete(String username,String ip) throws NotFoundException, InternalServerError, ForbiddenAccessFromIpAddress {
-       UserEntity user=getUser(username,ip);
+    public void delete(String username) throws NotFoundException, InternalServerError {
+       UserEntity user=userRepository.findAll().stream().filter(elem->elem.getUsername().equals(username)
+       && elem.getIsDeleted()==0).findAny().get();
 //        Optional<UserEntity> user = userRepository.findAll().stream()
 //                .filter(elem -> elem.getUsername().equals(username)).findAny();
             Optional<FileEntity> fileEntity=filesRepository.findAll().stream().filter(elem->elem.getName().equals(user.getUserDir())).findAny();
@@ -116,6 +119,7 @@ public class UserService {
             e.setIsReadApproved(user.getIsReadApproved());
             e.setIsUpdateApproved(user.getIsUpdateApproved());
             e.setIsDeleteApproved(user.getIsDeleteApproved());
+            e.setIsPasswordChanged(user.getIsPasswordChanged());
             userRepository.save(e);
         }
        else{
@@ -203,5 +207,17 @@ public class UserService {
             throw new ForbiddenAccessFromIpAddress("Cannot access app from this ip adress.");
         }
         return u.getRole();
+    }
+
+    public void checkIp(String username, String ip) throws NotFoundException, ForbiddenAccessFromIpAddress {
+        Optional<UserEntity>user=userRepository.findAll().stream().filter(elem->elem.getIsDeleted()==0 && elem.getUsername().equals(username))
+                .findAny();
+        if(user.isEmpty()){
+            throw  new NotFoundException("User is not found");
+        }
+        UserEntity u=user.get();
+        if(u.getRole().equals("client") && u.getIpAddress()!=null && !"".equals(u.getIpAddress()) && !u.getIpAddress().equals(ip)){
+            throw new ForbiddenAccessFromIpAddress("Cannot access app from this ip adress.");
+        }
     }
 }

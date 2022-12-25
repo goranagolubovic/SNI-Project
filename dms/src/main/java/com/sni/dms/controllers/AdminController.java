@@ -57,6 +57,7 @@ public class AdminController {
             userRequest.setLastname("");
             service.createDefaultDirForUser(user.getUserDir());
             user.setIsDeleted((byte) 0);
+            user.setIsPasswordChanged((byte)0);
             UserEntity createdUser = repository.save(user);
 
             FileEntity fileEntity = new FileEntity();
@@ -112,6 +113,7 @@ public class AdminController {
 //                user.setPassword(Hashing.sha512().hashString(user.getPassword(), StandardCharsets.UTF_8).toString());
 //            }
             user.getUser().setIsDeleted((byte) 0);
+            user.getUser().setIsPasswordChanged((byte) 0);
             service.updateUser(user.getUser(),ip);
             kcAdminClient.updateKeyCloakUser(user);
 
@@ -131,16 +133,14 @@ public class AdminController {
     }
     @DeleteMapping(value = "/admin/users/{username}")
     public ResponseEntity<ResponseRecord> deleteUser(@PathVariable String username, HttpServletRequest httpServletRequest) {
-        String ip = HttpUtils.getRequestIP(httpServletRequest);
+        //String ip = HttpUtils.getRequestIP(httpServletRequest);
     try {
-        service.delete(username,ip);
+        service.delete(username);
         return ResponseEntity.ok(new ResponseRecord(200,""));
     }
     catch (NotFoundException exception){
         return ResponseEntity.ok(new ResponseRecord(404,exception.getMessage()));
     } catch (InternalServerError e) {
-        return ResponseEntity.ok(new ResponseRecord(500,e.getMessage()));
-    } catch (ForbiddenAccessFromIpAddress e) {
         return ResponseEntity.ok(new ResponseRecord(500,e.getMessage()));
     }
     }

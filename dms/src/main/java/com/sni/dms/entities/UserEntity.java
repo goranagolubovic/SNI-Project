@@ -40,6 +40,9 @@ public class UserEntity {
     @Basic
     @Column(name = "is_deleted")
     private Byte isDeleted;
+    @Basic
+    @Column(name = "isPasswordChanged")
+    private Byte isPasswordChanged;
     public int getIdUser() {
         return idUser;
     }
@@ -119,6 +122,12 @@ public class UserEntity {
         this.isDeleted = isDeleted;
     }
 
+    public Byte getIsPasswordChanged(){
+        return isPasswordChanged;
+    }
+    public  void  setIsPasswordChanged(Byte isPasswordChanged){
+        this.isPasswordChanged=isPasswordChanged;
+    }
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

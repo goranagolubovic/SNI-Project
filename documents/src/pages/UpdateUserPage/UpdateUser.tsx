@@ -178,9 +178,7 @@ const UpdateUser = () => {
           )}
 
           <PasswordInput
-            button={"visible"}
             placeholder={"Password"}
-            icon="noicon"
             className={
               errors.password ? styles.componentWithError : styles.component
             }

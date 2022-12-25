@@ -1,5 +1,5 @@
 import React from "react";
-import { INVALID_FORM, REQUIRED } from "../../validation_errors";
+import { INVALID_FORM, NOT_MATCH, REQUIRED } from "../../validation_errors";
 import styles from "./ErrorComponent.module.css";
 import classNames from "classnames";
 
@@ -15,9 +15,11 @@ const checkType = (name: string, type?: string) => {
   } else if (
     type === "minLength" ||
     type === "maxLength" ||
-    type === "pattern"
+    (type === "pattern" && name !== "Confirm password")
   ) {
     return name + INVALID_FORM;
+  } else if (name === "Confirm password") {
+    return NOT_MATCH;
   } else {
     return type;
   }

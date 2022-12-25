@@ -25,6 +25,7 @@ import { BACKEND_URL, DELETE_FOLDER_MESSAGE } from "../../constants";
 import { AvailableDirsRequest } from "../../models/AvailableDirsRequest";
 import { CreateFileRequest } from "../../models/CreateFileRequest";
 import { getToken, getUsername } from "../../util";
+import ChangePasswordDialog from "../ChangePasswordDialog/ChangePasswordDialog";
 import styles from "./DefaultDir.module.css";
 const DefaultDir = () => {
   const history = useHistory();
@@ -40,6 +41,7 @@ const DefaultDir = () => {
   const [username, setUsername] = useState("");
   const [file, setFile] = useState("");
   const [isAddFileActive, setIsFileActive] = useState(false);
+  const [isPasswordChanged, setIsPasswordChanged] = useState(false);
   const [message, setMessage] = useState("");
   const [isAddFOlderActive, setIsFolderActive] = useState(false);
   const [isUserInfoFetchingCompleted, setIsUserInfoFetchingCompleted] =
@@ -220,6 +222,7 @@ const DefaultDir = () => {
         setCurrentDir(respData.user.userDir);
         setRole(respData.user.role);
         setUsername(respData.user.username);
+        setIsPasswordChanged(respData.user.isPasswordChanged === 1);
       } else {
         setMessage(respData.loginMessage);
         console.log(respData.loginMessage);
@@ -384,7 +387,7 @@ const DefaultDir = () => {
 
   return (
     <div className={styles.centralContainer}>
-      {file === "" && message === "" && (
+      {file === "" && message === "" && isPasswordChanged && (
         <div className={styles.centralContainer}>
           <div className={styles.actions}>
             <div className={styles.actionsContent}>
@@ -464,7 +467,7 @@ const DefaultDir = () => {
         </div>
       )}
       <div className={styles.centralContainer}>
-        {file !== "" && (
+        {file !== "" && isPasswordChanged && (
           <div className={styles.actions}>
             <div className={styles.actionsContent}>
               {currentDir != defaultDir && (
@@ -550,7 +553,6 @@ const DefaultDir = () => {
             )}
           </div>
         )}
-        {message !== "" && <p className={styles.error}>{message}</p>}
       </div>
     </div>
   );

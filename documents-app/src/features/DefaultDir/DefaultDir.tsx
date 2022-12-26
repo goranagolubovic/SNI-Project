@@ -24,7 +24,7 @@ import Select from "../../components/Select/Select";
 import { BACKEND_URL, DELETE_FOLDER_MESSAGE } from "../../constants";
 import { AvailableDirsRequest } from "../../models/AvailableDirsRequest";
 import { CreateFileRequest } from "../../models/CreateFileRequest";
-import { getToken, getUsername } from "../../util";
+import { getToken, getUsername, validateURL } from "../../util";
 import ChangePasswordDialog from "../ChangePasswordDialog/ChangePasswordDialog";
 import styles from "./DefaultDir.module.css";
 const DefaultDir = () => {
@@ -46,6 +46,10 @@ const DefaultDir = () => {
   const [isAddFOlderActive, setIsFolderActive] = useState(false);
   const [isUserInfoFetchingCompleted, setIsUserInfoFetchingCompleted] =
     useState(false);
+  const [isCreateAllowed, setIsCreateAllowed] = useState(false);
+  const [isReadAllowed, setIsReadAllowed] = useState(false);
+  const [isUpdateAllowed, setIsUpdateAllpwed] = useState(false);
+  const [isDeleteAllowed, setIsDeleteAllowed] = useState(false);
   const {
     register,
     handleSubmit,
@@ -193,6 +197,9 @@ const DefaultDir = () => {
       .then((blob) => {
         var url = window.URL.createObjectURL(blob);
         var a = document.createElement("a");
+        if (validateURL(url)) {
+          url = "";
+        }
         a.href = url;
         a.download = file;
         document.body.appendChild(a); // we need to append the element to the dom -> otherwise it will not work in firefox
@@ -221,8 +228,13 @@ const DefaultDir = () => {
         setDefaultDir(respData.user.userDir);
         setCurrentDir(respData.user.userDir);
         setRole(respData.user.role);
+        console.log("ROLEE" + role);
         setUsername(respData.user.username);
         setIsPasswordChanged(respData.user.isPasswordChanged === 1);
+        setIsReadAllowed(respData.user.isReadApproved === 1);
+        setIsCreateAllowed(respData.user.isCreateApproved === 1);
+        setIsUpdateAllpwed(respData.user.isUpdateApproved === 1);
+        setIsDeleteAllowed(respData.user.isDeleteApproved === 1);
       } else {
         setMessage(respData.loginMessage);
         console.log(respData.loginMessage);
@@ -433,7 +445,7 @@ const DefaultDir = () => {
               )}
             </div>
             <div className={styles.actionsContent}>
-              {role !== "admin" && (
+              {role !== "admin" && isCreateAllowed && (
                 <div>
                   <Button type="add" onClick={() => findFileChooser()}>
                     FILE UPLOAD
@@ -478,12 +490,14 @@ const DefaultDir = () => {
               )}
             </div>
             <div className={styles.actionsContent}>
-              <Button type="add" onClick={() => saveFile()}>
-                DOWNLOAD FILE
-              </Button>
+              {isReadAllowed && (
+                <Button type="add" onClick={() => saveFile()}>
+                  DOWNLOAD FILE
+                </Button>
+              )}
             </div>
             <div className={styles.actionsContent}>
-              {role !== "admin" && (
+              {role !== "admin" && isDeleteAllowed && (
                 <Button type="add" onClick={() => removeFile()}>
                   DELETE FILE
                 </Button>
@@ -491,6 +505,7 @@ const DefaultDir = () => {
             </div>
             <div className={styles.actionsContent}>
               {role !== "admin" &&
+                isUpdateAllowed &&
                 !file.endsWith(".png" || ".jpeg" || "jpg" || "svg") && (
                   <Button type="add" onClick={() => unableEditing()}>
                     EDIT FILE
@@ -552,6 +567,12 @@ const DefaultDir = () => {
               </div>
             )}
           </div>
+        )}
+        {message !== "" && <p>{message}</p>}
+        {!isPasswordChanged && (
+          <ChangePasswordDialog
+            stateChanger={setIsPasswordChanged}
+          ></ChangePasswordDialog>
         )}
       </div>
     </div>

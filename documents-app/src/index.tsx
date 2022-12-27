@@ -6,7 +6,7 @@ import reportWebVitals from "./reportWebVitals";
 import Keycloak from "keycloak-js";
 
 let initOptions = {
-  url: "http://localhost:8080/auth/",
+  url: "https://localhost:8443/",
   realm: "SNI",
   clientId: "dms1-react",
   onLoad: "login-required",

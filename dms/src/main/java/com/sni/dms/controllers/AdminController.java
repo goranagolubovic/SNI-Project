@@ -1,6 +1,5 @@
 package com.sni.dms.controllers;
 
-import com.google.common.hash.Hashing;
 import com.google.gson.Gson;
 import com.sni.dms.entities.FileEntity;
 import com.sni.dms.entities.UserEntity;

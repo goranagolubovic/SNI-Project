@@ -14,6 +14,7 @@ const SystemAdmin = () => {
   const history = useHistory();
   const [isPasswordChanged, setIsPasswordChanged] = useState(false);
   const [message, setMessage] = useState("");
+  const [role, setRole] = useState("");
   const logout = () => {
     logoutUser();
   };
@@ -25,6 +26,7 @@ const SystemAdmin = () => {
 
       if (respData.status == 200) {
         setIsPasswordChanged(respData.user.isPasswordChanged === 1);
+        setRole(respData.user.role);
       } else {
         setMessage(respData.loginMessage);
         console.log(respData.loginMessage);
@@ -42,15 +44,17 @@ const SystemAdmin = () => {
       {isPasswordChanged && (
         <div>
           <div className={styles.addButton}>
-            <Button
-              type="add"
-              width="150px"
-              height="35px"
-              onClick={() => history.push("/system-admin/create-user")}
-            >
-              <PersonAdd style={{ color: "white", fontSize: 20 }}></PersonAdd>{" "}
-              ADD USER
-            </Button>
+            {role === "admin" && (
+              <Button
+                type="add"
+                width="150px"
+                height="35px"
+                onClick={() => history.push("/system-admin/create-user")}
+              >
+                <PersonAdd style={{ color: "white", fontSize: 20 }}></PersonAdd>{" "}
+                ADD USER
+              </Button>
+            )}
             <Button
               type="add"
               width="150px"

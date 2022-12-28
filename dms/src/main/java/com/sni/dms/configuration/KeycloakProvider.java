@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
 @Getter
 public class KeycloakProvider {
 
-@Value("http://localhost:8080/auth/")
+@Value("${keycloak.auth-server-url}")
     public  String serverURL;
     @Value("${keycloak.realm}")
     public String realm;
@@ -42,7 +42,7 @@ public class KeycloakProvider {
 //                    .grantType(OAuth2Constants.PASSWORD)
 //                    .build();
                     .realm("master")
-                    .serverUrl("http://localhost:8080/auth/")
+                    .serverUrl("https://localhost:8443/")
                     .clientId("admin-cli")
                     .username("admin")
                     .password("admin")

@@ -68,6 +68,16 @@ const AddUser = () => {
     }
     if (userData.role === "document_admin") {
       userData.ipAddress = "";
+      userData.isReadApproved = 1;
+      userData.isCreateApproved = 1;
+      userData.isUpdateApproved = 1;
+      userData.isDeleteApproved = 1;
+    }
+    if (userData.role === "admin") {
+      userData.isReadApproved = 1;
+      userData.isCreateApproved = 1;
+      userData.isUpdateApproved = 1;
+      userData.isDeleteApproved = 1;
     }
     userData.userDir = INITIAL_DIR + username + "/" + userData.userDir;
     userData.userDir = formatUserDir(userData.userDir);

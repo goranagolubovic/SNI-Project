@@ -53,7 +53,6 @@ public class UserService {
         return keycloak.realm("SNI").users();
     }
     public static UserRepresentation getKeyCloakUser(String username){
-
         Optional<org.keycloak.representations.idm.UserRepresentation> user = getUsersFromKeyCloak().list().stream().filter(elem->elem.getUsername().equals(username)).findAny();
         if(user.isPresent())
             return  user.get();
@@ -69,6 +68,7 @@ public class UserService {
     }
 
     public void delete(String username) throws NotFoundException, InternalServerError {
+        System.out.println(username);
        UserEntity user=userRepository.findAll().stream().filter(elem->elem.getUsername().equals(username)
        && elem.getIsDeleted()==0).findAny().get();
 //        Optional<UserEntity> user = userRepository.findAll().stream()

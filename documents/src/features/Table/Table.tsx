@@ -158,9 +158,6 @@ const Table = () => {
       {forbidden && (
         <div className={styles.statusError}>
           <p>{FORBIDDEN}</p>
-          <Button type="link" onClick={() => history.push("/")}>
-            Sign in
-          </Button>
         </div>
       )}
     </div>

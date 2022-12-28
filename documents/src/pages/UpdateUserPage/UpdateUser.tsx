@@ -115,6 +115,16 @@ const UpdateUser = () => {
     }
     if (userData.role === "document_admin") {
       userData.ipAddress = "";
+      userData.isReadApproved = 1;
+      userData.isCreateApproved = 1;
+      userData.isUpdateApproved = 1;
+      userData.isDeleteApproved = 1;
+    }
+    if (userData.role === "admin") {
+      userData.isReadApproved = 1;
+      userData.isCreateApproved = 1;
+      userData.isUpdateApproved = 1;
+      userData.isDeleteApproved = 1;
     }
     userData.userDir = formatUserDir(startDir + userData.userDir);
     if (userData.role === "admin") {
